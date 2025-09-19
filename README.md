@@ -19,6 +19,6 @@ La plataforma incluye un sistema de **login con roles (usuario y administrador)*
 
 - **Frontend:** React + Bootstrap  
 - **Backend:** Spring Boot (Java) *o* Node.js + Express  
-- **Base de datos:** MySQL  
+- **Base de datos:** SQL  
 - **Pasarela de pago:** MercadoPago SDK  
 - **Testing:** Postman, Swagger (APIs), JUnit (Java) o Jest (Node.js)  
