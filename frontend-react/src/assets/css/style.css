@@ -1,0 +1,1414 @@
+/********** TURISNOW - CSS UNIFICADO **********/
+
+/* ==================================================
+   VARIABLES Y CONFIGURACIÓN BASE
+   ================================================== */
+:root {
+    --primary: #4A90E2;
+    --secondary: #357ABD;
+    --light: #F5F5F5;
+    --dark: #14141F;
+}
+
+/* Reset y configuración base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, hsl(0, 0%, 100%) 0%, #FFFFFF 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Quitar el padding-top del body */
+body {
+  font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, hsl(0, 0%, 100%) 0%, #FFFFFF 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+  /* padding-top: 90px; <- QUITADO */
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;  /* ...existing code... */
+  
+  /* Padding para el navbar fixed */
+  body {
+    font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, hsl(0, 0%, 100%) 0%, #FFFFFF 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-top: 90px; /* Espacio para el navbar fixed + topbar */
+  }
+  
+  /* Ajustar el auth-container también */
+  .auth-container {
+    position: relative;
+    z-index: 100;
+    background: #ffffff;
+    min-height: 100vh;
+    padding-top: 20px; /* Reducir ya que el body tiene padding-top */
+    padding-bottom: 2rem;
+  }
+  
+  /* ...existing code... */
+  flex-direction: column;
+}
+
+.fw-medium {
+    font-weight: 600 !important;
+}
+
+.fw-semi-bold {
+    font-weight: 700 !important;
+}
+
+/* ==================================================
+   UTILIDADES GLOBALES
+   ================================================== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.back-to-top {
+    position: fixed;
+    display: none;
+    right: 45px;
+    bottom: 45px;
+    z-index: 99;
+}
+
+/* ==================================================
+   ANIMACIONES GLOBALES
+   ================================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.slide-in-up {
+  animation: slideInUp 0.6s ease-out;
+}
+
+/* ==================================================
+   SPINNER / LOADING
+   ================================================== */
+#spinner {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .5s ease-out, visibility 0s linear .5s;
+    z-index: 99999;
+}
+
+#spinner.show {
+    transition: opacity .5s ease-out, visibility 0s linear 0s;
+    visibility: visible;
+    opacity: 1;
+}
+
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #4A90E2 0%, #FFFFFF 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.3s ease-out;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-spinner, .spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+.spinner {
+  display: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.loading-text {
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* ==================================================
+   BOTONES
+   ================================================== */
+.btn {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    transition: .5s;
+}
+
+.btn.btn-primary,
+.btn.btn-secondary {
+    color: #FFFFFF;
+}
+
+.btn-square {
+    width: 38px;
+    height: 38px;
+}
+
+.btn-sm-square {
+    width: 32px;
+    height: 32px;
+}
+
+.btn-lg-square {
+    width: 48px;
+    height: 48px;
+}
+
+.btn-square,
+.btn-sm-square,
+.btn-lg-square {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: normal;
+    border-radius: 0px;
+}
+
+.auth-btn, .card-btn {
+  background: linear-gradient(135deg, #4A90E2, #FFFFFF);
+  color: #333;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  margin-top: 10px;
+  text-decoration: none;
+  display: inline-block;
+  border: 1px solid #4A90E2;
+}
+
+.auth-btn:hover, .card-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(74, 144, 226, 0.3);
+}
+
+.auth-btn:active, .card-btn:active {
+  transform: translateY(0);
+}
+
+.auth-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.auth-btn.loading {
+  pointer-events: none;
+}
+
+.auth-btn.loading .spinner {
+  display: block;
+}
+
+.auth-btn.loading .btn-text {
+  opacity: 0;
+}
+
+.logout-btn {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.logout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+}
+
+/* ==================================================
+   TÍTULOS DE SECCIÓN
+   ================================================== */
+.section-title {
+    position: relative;
+    display: inline-block;
+    text-transform: uppercase;
+}
+
+.section-title::before {
+    position: absolute;
+    content: "";
+    width: calc(100% + 80px);
+    height: 2px;
+    top: 4px;
+    left: -40px;
+    background: var(--primary);
+    z-index: -1;
+}
+
+.section-title::after {
+    position: absolute;
+    content: "";
+    width: calc(100% + 120px);
+    height: 2px;
+    bottom: 5px;
+    left: -60px;
+    background: var(--primary);
+    z-index: -1;
+}
+
+.section-title.text-start::before {
+    width: calc(100% + 40px);
+    left: 0;
+}
+
+.section-title.text-start::after {
+    width: calc(100% + 60px);
+    left: 0;
+}
+
+/* ==================================================
+   HEADER / NAVBAR
+   ================================================== */
+
+/* IMPORTANTE: NO forzar transparencia aquí */
+nav.navbar {
+  /* Se eliminan reglas que fuerzan transparencia */
+}
+
+/* NAV por defecto (arriba del todo) — CON TU GRADIENTE ESPECÍFICO */
+nav.navbar.atTop {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 19%, rgba(74, 144, 226, 0.35) 55%, rgba(255, 255, 255, 0) 100%) !important;
+  transition: all .3s ease;
+  border: none;
+}
+
+/* NAV al hacer scroll — fondo blanco sólido */
+nav.navbar.scrolled {
+  background: #ffffff !important;
+  box-shadow: 0 2px 20px rgba(0,0,0,.12);
+  transition: all .3s ease;
+}
+
+/* Estilos para los elementos del navbar cuando está arriba */
+nav.navbar.atTop .navbar-brand {
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+nav.navbar.atTop .navbar-brand .text-primary {
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+nav.navbar.atTop .navbar-nav .nav-link {
+  color: #ffffff !important;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  transition: all 0.3s ease;
+}
+
+nav.navbar.atTop .navbar-nav .nav-link:hover,
+nav.navbar.atTop .navbar-nav .nav-link.active {
+  color: #4A90E2 !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 1);
+}
+
+/* Botón de registro cuando está arriba */
+nav.navbar.atTop .btn-primary {
+  background: rgba(74, 144, 226, 0.4) !important;
+  border: 2px solid rgba(255, 255, 255, 0.7) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+nav.navbar.atTop .btn-primary:hover {
+  background: rgba(74, 144, 226, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Estilos para los elementos del navbar cuando hace scroll */
+nav.navbar.scrolled .navbar-brand {
+  color: #4A90E2 !important;
+  text-shadow: none;
+}
+
+nav.navbar.scrolled .navbar-brand .text-primary {
+  color: #4A90E2 !important;
+}
+
+nav.navbar.scrolled .navbar-nav .nav-link {
+  color: #333333 !important;
+  text-shadow: none;
+}
+
+nav.navbar.scrolled .navbar-nav .nav-link:hover,
+nav.navbar.scrolled .navbar-nav .nav-link.active {
+  color: #4A90E2 !important;
+}
+
+nav.navbar.scrolled .btn-primary {
+  background: #4A90E2 !important;
+  border-color: #4A90E2 !important;
+  color: #ffffff !important;
+  text-shadow: none;
+  box-shadow: none;
+}
+
+nav.navbar.scrolled .btn-primary:hover {
+  background: #357ABD !important;
+  border-color: #357ABD !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+}
+
+/* Toggler styles */
+nav.navbar.atTop .navbar-toggler {
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+nav.navbar.scrolled .navbar-toggler {
+  border: 2px solid rgba(74, 144, 226, 0.4);
+  background: rgba(74, 144, 226, 0.1);
+}
+
+nav.navbar.atTop .navbar-toggler .fa-bars {
+  color: #ffffff;
+}
+
+nav.navbar.scrolled .navbar-toggler .fa-bars {
+  color: #4A90E2;
+}
+
+/* User avatar styles */
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.sticky-top .user-avatar {
+    background: rgba(74, 144, 226, 0.2);
+    color: #4A90E2;
+    border-color: rgba(74, 144, 226, 0.3);
+}
+
+/* AUTH CONTAINER - Ajustado para el comportamiento original */
+.auth-container {
+  position: relative;
+  z-index: 100;
+  background: #ffffff;
+  min-height: 100vh;
+  padding-top: 20px; /* Reducido ya que no hay navbar fixed */
+  padding-bottom: 2rem;
+}
+
+/* ==================================================
+   FOOTER
+   ================================================== */
+.footer .btn.btn-social {
+  margin-right: 5px;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--light);
+  font-weight: normal;
+  border: 1px solid #FFFFFF;
+  border-radius: 35px;
+  transition: .3s;
+}
+
+.footer .btn.btn-social:hover {
+  color: var(--primary);
+}
+
+.footer .btn.btn-link {
+  display: block;
+  margin-bottom: 5px;
+  padding: 0;
+  text-align: left;
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: normal;
+  text-transform: capitalize;
+  transition: .3s;
+  text-decoration: none;
+}
+
+.footer .btn.btn-link::before {
+  position: relative;
+  content: "\f105";
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  margin-right: 10px;
+}
+
+.footer .btn.btn-link:hover {
+  letter-spacing: 1px;
+  box-shadow: none;
+  color: var(--primary);
+}
+
+.footer .copyright {
+  padding: 25px 0;
+  font-size: 15px;
+  border-top: 1px solid rgba(256, 256, 256, .1);
+}
+
+.footer .copyright a {
+  color: var(--light);
+}
+
+.footer .footer-menu a {
+  margin-right: 15px;
+  padding-right: 15px;
+  border-right: 1px solid rgba(255, 255, 255, .1);
+  color: #FFFFFF;
+  text-decoration: none;
+  transition: .3s;
+}
+
+.footer .footer-menu a:hover {
+  color: var(--primary);
+}
+
+.footer .footer-menu a:last-child {
+  margin-right: 0;
+  padding-right: 0;
+  border-right: none;
+}
+
+/* ==================================================
+   SERVICIOS
+   ================================================== */
+.service-item {
+    box-shadow: 0 0 45px rgba(0, 0, 0, .08);
+    transition: .5s;
+}
+
+.service-item:hover {
+    background: var(--primary);
+}
+
+.service-item * {
+    transition: .5s;
+}
+
+.service-item:hover * {
+    color: var(--light) !important;
+}
+
+/* ==================================================
+   NEWSLETTER
+   ================================================== */
+.newsletter {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+/* ==================================================
+   COMPONENTES DE AUTENTICACIÓN
+   ================================================== */
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-container {
+  position: relative;
+  z-index: 100;
+  background: #ffffff;
+  min-height: 100vh;
+  padding-top: 120px; /* Espacio para el navbar */
+  padding-bottom: 2rem;
+}
+
+.auth-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 40px 30px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: slideInUp 0.6s ease-out;
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+}
+
+.auth-form {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+  padding: 3rem 2rem;
+  max-width: 500px;
+  position: relative;
+  z-index: 101;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.logo i {
+  font-size: 2.5rem;
+  color: #4A90E2;
+  animation: pulse 2s infinite;
+}
+
+.logo h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  background: linear-gradient(135deg, #4A90E2, #FFFFFF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 300;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.form-group label i {
+  color: #4A90E2;
+  width: 16px;
+}
+
+.form-group input {
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.auth-form .form-control {
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  padding: 12px 16px;
+  transition: all 0.3s ease;
+}
+
+.auth-form .form-control:focus {
+  border-color: #4A90E2;
+  box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #4A90E2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  transform: translateY(-1px);
+}
+
+.form-group input::placeholder {
+  color: #999;
+}
+
+.password-input {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+  transition: color 0.3s ease;
+}
+
+.toggle-password:hover {
+  color: #4A90E2;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.remember-me input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e1e5e9;
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.remember-me input[type="checkbox"]:checked + .checkmark {
+  background: #4A90E2;
+  border-color: #4A90E2;
+}
+
+.remember-me input[type="checkbox"]:checked + .checkmark::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.forgot-password, .auth-link, .terms-link {
+  color: #4A90E2;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+  font-weight: 500;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.forgot-password:hover, .auth-link:hover, .terms-link:hover {
+  color: #2E5C8A;
+  text-decoration: underline;
+}
+
+.error-message, .success-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+  margin-top: 10px;
+  display: none;
+}
+
+.error-message {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.success-message {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.auth-footer p {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* ==================================================
+   DASHBOARD
+   ================================================== */
+.dashboard-container {
+  min-height: 100vh;
+  padding: 20px;
+  position: relative;
+}
+
+.dashboard-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.welcome-section h1 {
+  color: #333;
+  margin-bottom: 10px;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.welcome-section p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.user-info {
+  text-align: right;
+}
+
+.dashboard-header .user-avatar {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #4A90E2, #FFFFFF);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0 auto 10px;
+  border: 1px solid #4A90E2;
+}
+
+.user-details {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.user-email {
+  color: #666;
+  margin-bottom: 3px;
+}
+
+.user-role {
+  color: #4A90E2;
+  font-weight: 500;
+}
+
+.dashboard-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 25px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.3s ease;
+  animation: slideInUp 0.6s ease-out;
+}
+
+.dashboard-card:nth-child(1) { animation-delay: 0.1s; }
+.dashboard-card:nth-child(2) { animation-delay: 0.2s; }
+.dashboard-card:nth-child(3) { animation-delay: 0.3s; }
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+}
+
+.card-icon {
+  font-size: 3rem;
+  color: #4A90E2;
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.card-description {
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* ==================================================
+   DECORACIÓN DE FONDO
+   ================================================== */
+.background-decoration {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.floating-shapes {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  animation: float 6s ease-in-out infinite;
+}
+
+.shape-1 {
+  width: 80px;
+  height: 80px;
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.shape-2 {
+  width: 120px;
+  height: 120px;
+  top: 60%;
+  right: 15%;
+  animation-delay: 2s;
+}
+
+.shape-3 {
+  width: 60px;
+  height: 60px;
+  bottom: 20%;
+  left: 20%;
+  animation-delay: 4s;
+}
+
+.shape-4 {
+  width: 100px;
+  height: 100px;
+  top: 30%;
+  right: 30%;
+  animation-delay: 1s;
+}
+
+/* ==================================================
+   RESPONSIVE DESIGN
+   ================================================== */
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+  
+  .footer .row.g-5 {
+    row-gap: 2rem !important;
+  }
+  
+  .footer .col-lg-3.col-md-6 {
+    margin-bottom: 1rem;
+  }
+  
+  .footer .footer-menu {
+    text-align: center;
+  }
+  
+  .footer .footer-menu a {
+    margin: 0 10px;
+    padding: 0;
+    border: none;
+    display: inline-block;
+  }
+  
+  .dashboard-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .user-info {
+    text-align: center;
+  }
+
+  .dashboard-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 15px;
+  }
+  
+  .auth-card {
+    padding: 30px 20px;
+  }
+  
+  .logo h1 {
+    font-size: 1.8rem;
+  }
+  
+  .form-options {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+  
+  .dashboard-container {
+    padding: 15px;
+  }
+
+  .dashboard-header {
+    padding: 20px;
+  }
+
+  .welcome-section h1 {
+    font-size: 1.5rem;
+  }
+
+  .dashboard-card {
+    padding: 20px;
+  }
+}
+
+/* ==================================================
+   AUTH PAGES (LOGIN/REGISTER)
+   ================================================== */
+
+.auth-container {
+  position: relative;
+  z-index: 100;
+  background: #ffffff;
+  min-height: 100vh;
+  padding-top: 120px; /* Espacio para el navbar */
+  padding-bottom: 2rem;
+}
+
+.auth-form {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+  padding: 3rem 2rem;
+  max-width: 500px;
+  position: relative;
+  z-index: 101;
+}
+
+.auth-form .form-control {
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  padding: 12px 16px;
+  transition: all 0.3s ease;
+}
+
+.auth-form .form-control:focus {
+  border-color: #4A90E2;
+  box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+}
+
+.auth-form .btn-primary {
+  background: #4A90E2;
+  border-color: #4A90E2;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.auth-form .btn-primary:hover {
+  background: #357ABD;
+  border-color: #357ABD;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+}
+
+.auth-form .btn-outline-secondary {
+  border-color: #e9ecef;
+  color: #6c757d;
+  border-radius: 0 10px 10px 0;
+}
+
+.auth-form .btn-outline-secondary:hover {
+  background: #f8f9fa;
+  border-color: #4A90E2;
+  color: #4A90E2;
+}
+
+.auth-form .form-check-input:checked {
+  background-color: #4A90E2;
+  border-color: #4A90E2;
+}
+
+/* Responsive para auth forms */
+@media (max-width: 991.98px) {
+  .auth-container {
+    padding-top: 100px; /* Menos padding en móvil */
+  }
+  
+  .auth-form {
+    margin: 1rem;
+    padding: 2rem 1.5rem;
+  }
+  
+  .auth-container .col-lg-6:last-child {
+    display: none !important;
+  }
+}
+
+/* ==================================================
+   NAVBAR - EXACTAMENTE COMO EL ORIGINAL + GRADIENTE
+   ================================================== */
+
+/*** Navbar ***/
+.navbar-light .navbar-nav .nav-link {
+    font-family: 'Nunito', sans-serif;
+    position: relative;
+    margin-right: 25px;
+    padding: 35px 0;
+    color: #FFFFFF !important;
+    font-size: 18px;
+    font-weight: 600;
+    outline: none;
+    transition: .5s;
+}
+
+.sticky-top.navbar-light .navbar-nav .nav-link {
+    padding: 20px 0;
+    color: var(--dark) !important;
+}
+
+.navbar-light .navbar-nav .nav-link:hover,
+.navbar-light .navbar-nav .nav-link.active {
+    color: #4A90E2 !important;
+}
+
+.navbar-light .navbar-brand img {
+    max-height: 60px;
+    transition: .5s;
+}
+
+.sticky-top.navbar-light .navbar-brand img {
+    max-height: 45px;
+}
+
+/* GRADIENTE PERSONALIZADO PARA TURISNOW */
+.navbar-light {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 19%, rgba(24, 48, 75, 0.35) 55%, rgba(255, 255, 255, 0) 100%) !important;
+}
+
+.sticky-top.navbar-light {
+    background: #FFFFFF !important;
+}
+
+/* Estilos del brand */
+.navbar-light .navbar-brand h1 {
+    color: #FFFFFF !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.sticky-top.navbar-light .navbar-brand h1 {
+    color: #4A90E2 !important;
+    text-shadow: none;
+}
+
+/* Botón de registro */
+.navbar-light .btn-primary {
+    background: rgba(74, 144, 226, 0.4) !important;
+    border: 2px solid rgba(255, 255, 255, 0.7) !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.navbar-light .btn-primary:hover {
+    background: rgba(74, 144, 226, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.9) !important;
+    transform: translateY(-2px);
+}
+
+.sticky-top.navbar-light .btn-primary {
+    background: #4A90E2 !important;
+    border-color: #4A90E2 !important;
+    color: #ffffff !important;
+    text-shadow: none;
+    box-shadow: none;
+}
+
+.sticky-top.navbar-light .btn-primary:hover {
+    background: #357ABD !important;
+    border-color: #357ABD !important;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+}
+
+/* Toggler */
+.navbar-light .navbar-toggler {
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.sticky-top.navbar-light .navbar-toggler {
+    border: 2px solid rgba(74, 144, 226, 0.4);
+    background: rgba(74, 144, 226, 0.1);
+}
+
+.navbar-light .navbar-toggler .fa-bars {
+    color: #ffffff;
+}
+
+.sticky-top.navbar-light .navbar-toggler .fa-bars {
+    color: #4A90E2;
+}
+
+/* User avatar */
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.sticky-top .user-avatar {
+    background: rgba(74, 144, 226, 0.2);
+    color: #4A90E2;
+    border-color: rgba(74, 144, 226, 0.3);
+}
+
+@media (max-width: 991.98px) {
+    .sticky-top.navbar-light {
+        position: relative;
+        background: #FFFFFF;
+    }
+
+    .navbar-light .navbar-collapse {
+        margin-top: 15px;
+        border-top: 1px solid #DDDDDD;
+    }
+
+    .navbar-light .navbar-nav .nav-link,
+    .sticky-top.navbar-light .navbar-nav .nav-link {
+        padding: 10px 0;
+        margin-left: 0;
+        color: var(--dark) !important;
+    }
+
+    .navbar-light .navbar-brand img {
+        max-height: 45px;
+    }
+}
+
+@media (min-width: 992px) {
+    .navbar-light {
+        position: absolute;
+        width: 100%;
+        top: 0;
+        left: 0;
+        border-bottom: 1px solid rgba(256, 256, 256, .1);
+        z-index: 999;
+    }
+    
+    .sticky-top.navbar-light {
+        position: fixed;
+        background: #FFFFFF;
+    }
+
+    .navbar-light .navbar-nav .nav-link::before {
+        position: absolute;
+        content: "";
+        width: 0;
+        height: 2px;
+        bottom: -1px;
+        left: 50%;
+        background: #4A90E2;
+        transition: .5s;
+    }
+
+    .navbar-light .navbar-nav .nav-link:hover::before,
+    .navbar-light .navbar-nav .nav-link.active::before {
+        width: calc(100% - 2px);
+        left: 1px;
+    }
+
+    .navbar-light .navbar-nav .nav-link.nav-contact::before {
+        display: none;
+    }
+}
+
+/* ==================================================
+   TOPBAR - Estilos Adicionales
+   ================================================== */
+
+.faq-link {
+  transition: all 0.3s ease;
+  opacity: 0.8;
+}
+
+.faq-link:hover {
+  opacity: 1;
+  color: var(--primary) !important;
+  text-shadow: 0 0 8px rgba(74, 144, 226, 0.7);
+}
+
+/* ALTERNATIVA - Más específica para los iconos */
+/* Cuando navbar está arriba (translúcida) */
+.navbar-light:not(.sticky-top) .fa-heart,
+.navbar-light:not(.sticky-top) .fa-shopping-cart {
+    color: #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Cuando navbar hace scroll (blanca) */
+.navbar-light.sticky-top .fa-heart,
+.navbar-light.sticky-top .fa-shopping-cart {
+    color: #333333 !important;
+    text-shadow: none;
+}
+
+/* Hover states */
+.navbar-light:not(.sticky-top) .btn-icon:hover .fa-heart,
+.navbar-light:not(.sticky-top) .btn-icon:hover .fa-shopping-cart {
+    color: #4A90E2 !important;
+}
+
+.navbar-light.sticky-top .btn-icon:hover .fa-heart,
+.navbar-light.sticky-top .btn-icon:hover .fa-shopping-cart {
+    color: #4A90E2 !important;
+}

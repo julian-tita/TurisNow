@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import './AuthComponents.css';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -134,7 +133,16 @@ const Login: React.FC = () => {
               <span className="checkmark"></span>
               Recordarme
             </label>
-            <a href="#" className="forgot-password">¿Olvidaste tu contraseña?</a>
+            <button 
+              type="button" 
+              className="forgot-password"
+              onClick={() => {
+                // TODO: Implementar funcionalidad de recuperación de contraseña
+                alert('Funcionalidad de recuperación de contraseña próximamente');
+              }}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
           </div>
           
           <button
