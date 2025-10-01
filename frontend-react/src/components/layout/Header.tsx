@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [isSticky, setIsSticky] = useState(false);
-  const [cartItemCount, setCartItemCount] = useState(3); // Ejemplo, esto debería venir de un estado global
+  const [cartItemCount] = useState(0); // Ejemplo, esto debería venir de un estado global
 
   useEffect(() => {
     const handleScroll = () => {
@@ -56,38 +55,9 @@ const Header = () => {
         <div className="collapse navbar-collapse" id="navbarCollapse">
           {/* Navegación Principal */}
           <div className="navbar-nav ms-auto py-0">
-            {/* Explorar (Mega Menú) */}
-            <div className="nav-item dropdown">
-              <Link to="#" className="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                Explorar
-              </Link>
-              <div className="dropdown-menu dropdown-menu-mega m-0">
-                <div className="row">
-                  <div className="col-md-6">
-                    <h6 className="dropdown-header">Por Categoría</h6>
-                    <Link to="/explorar/categoria/aventura" className="dropdown-item">Aventura</Link>
-                    <Link to="/explorar/categoria/cultural" className="dropdown-item">Cultural</Link>
-                    <Link to="/explorar/categoria/gastronomia" className="dropdown-item">Gastronomía</Link>
-                    <Link to="/explorar/categoria/relax" className="dropdown-item">Relax</Link>
-                    <Link to="/explorar/categoria/familia" className="dropdown-item">Familia</Link>
-                  </div>
-                  <div className="col-md-6">
-                    <h6 className="dropdown-header">Por Destino</h6>
-                    <Link to="/explorar/destino/cordoba" className="dropdown-item">Córdoba</Link>
-                    <Link to="/explorar/destino/mendoza" className="dropdown-item">Mendoza</Link>
-                    <Link to="/explorar/destino/bariloche" className="dropdown-item">Bariloche</Link>
-                    <Link to="/explorar/destino/buenos-aires" className="dropdown-item">Buenos Aires</Link>
-                    <Link to="/explorar/destinos" className="dropdown-item text-primary fw-semibold">Ver todos...</Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+            <Link to="/explorar" className="nav-item nav-link">Explorar</Link>
             <Link to="/experiencias" className="nav-item nav-link">Experiencias</Link>
-            <Link to="/ofertas" className="nav-item nav-link">Ofertas</Link>
-            <Link to="/iturist" className="nav-item nav-link iturist-link">
-              <i className="fa fa-robot me-2"></i>ITurist
-            </Link>
+            <Link to="/itinerario" className="nav-item nav-link">Itinerario</Link>
           </div>
 
           {/* Buscador y Acciones */}
@@ -134,7 +104,7 @@ const Header = () => {
                     </div>
                   </button>
                   <ul className="dropdown-menu dropdown-menu-end">
-                    <li><Link to="/perfil" className="dropdown-item">Mi Perfil</Link></li>
+                    <li><Link to="/dashboard" className="dropdown-item">Mi Perfil</Link></li>
                     <li><Link to="/mis-reservas" className="dropdown-item">Mis Reservas</Link></li>
                     <li><hr className="dropdown-divider" /></li>
                     <li><button onClick={handleLogout} className="dropdown-item text-danger">Cerrar Sesión</button></li>

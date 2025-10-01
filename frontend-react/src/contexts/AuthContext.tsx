@@ -16,6 +16,7 @@ interface AuthContextType {
   logout: () => void;
   isLoading: boolean;
   error: string | null;
+  clearError: () => void;
 }
 
 interface RegisterData {
@@ -139,6 +140,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('turisnow_user');
   };
 
+  const clearError = () => {
+    setError(null);
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -146,7 +151,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     isLoading,
-    error
+    error,
+    clearError
   };
 
   return (

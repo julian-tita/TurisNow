@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -15,20 +15,30 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(''); // Estado para el mensaje de error
 
-  const { register } = useAuth();
+  const { register, error: authError, clearError } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Limpiar errores del contexto cuando se monte el componente Register
+    clearError();
+  }, [clearError]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Limpiar errores cuando el usuario empiece a escribir
+    if (error) setError('');
+    if (errors.length > 0) setErrors([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors([]);
+    setError(''); // Limpiar errores previos
     setIsLoading(true);
 
     // Validaciones
@@ -69,16 +79,26 @@ const Register = () => {
     }
 
     try {
-      await register({
+      // Llama a la función de registro del contexto de autenticación
+      const success = await register({
         username: formData.username.trim(),
         email: formData.email.trim(),
         nombreCompleto: formData.nombreCompleto.trim(),
         password: formData.password
       });
       
-      navigate('/dashboard');
+      // Solo redirige al login si el registro fue exitoso
+      if (success) {
+        navigate('/login');
+      } else {
+        // Si hay un error, obtiene el mensaje del contexto de autenticación
+        setError(authError || 'Ocurrió un error al registrarse. Por favor, intenta nuevamente.');
+      }
+
     } catch (err: any) {
-      setErrors([err.message || 'Error al registrar usuario']);
+      // Si hay un error, lo muestra en la misma página
+      const errorMessage = err.response?.data?.message || err.message || 'Ocurrió un error al registrarse.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -100,6 +120,20 @@ const Register = () => {
                 </Link>
                 <p className="text-muted">Únete a nuestra comunidad de viajeros</p>
               </div>
+
+              {/* Pop-up de error */}
+              {error && (
+                <div style={{ 
+                    padding: '10px', 
+                    backgroundColor: '#f8d7da', 
+                    color: '#721c24', 
+                    border: '1px solid #f5c6cb', 
+                    borderRadius: '5px', 
+                    marginBottom: '15px' 
+                }}>
+                    {error}
+                </div>
+              )}
 
               <form onSubmit={handleSubmit}>
                 {/* Nombre de usuario */}

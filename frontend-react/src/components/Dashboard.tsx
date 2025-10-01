@@ -52,86 +52,98 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  return (
-    <div className="dashboard-container">
-      <div className="background-decoration">
-        <div className="floating-shapes">
-          <div className="shape shape-1"></div>
-          <div className="shape shape-2"></div>
-          <div className="shape shape-3"></div>
-          <div className="shape shape-4"></div>
+  // Componente local para las tarjetas de features
+  const FeatureCard: React.FC<{
+    icon: string;
+    title: string;
+    description: string;
+    onClick: () => void;
+  }> = ({ icon, title, description, onClick }) => (
+    <div className="col-12 col-md-6 col-lg-4">
+      <div className="card h-100 shadow-sm border-0 rounded-4">
+        <div className="card-body text-center p-4">
+          <div className="mb-3">
+            <i className={`${icon} text-primary`} style={{ fontSize: '3rem' }}></i>
+          </div>
+          <h5 className="card-title mb-3">{title}</h5>
+          <p className="card-text text-muted mb-4">{description}</p>
+          <button 
+            className="btn btn-primary btn-lg w-100"
+            onClick={onClick}
+          >
+            {title === 'Explorar Destinos' ? 'Explorar Ahora' : 
+             title === 'Mis Viajes' ? 'Ver Mis Viajes' : 'Configurar'}
+          </button>
         </div>
       </div>
+    </div>
+  );
 
-      <div className="dashboard-header">
-        <div className="welcome-section">
-          <h1>{getGreeting()}, {user?.nombreCompleto.split(' ')[0]}!</h1>
-          <p>¿Listo para tu próxima aventura?</p>
-        </div>
-        <div className="user-info">
-          <div className="user-avatar">
-            {getInitials(user?.nombreCompleto || '')}
-          </div>
-          <div className="user-details">
-            <div className="user-name">{user?.nombreCompleto}</div>
-            <div className="user-email">{user?.email}</div>
-            <div className="user-role">
-              {user?.rol === 'ADMIN' ? 'Administrador' : 'Usuario'}
+  return (
+    <div className="auth-container" style={{ paddingTop: '120px' }}>
+      <div className="container-fluid">
+        <div className="container my-5">
+          {/* Hero Card */}
+          <div className="card shadow-sm border-0 rounded-4 mb-4">
+            <div className="card-body p-4 p-lg-5">
+              <div className="row align-items-center">
+                <div className="col-lg-8">
+                  <h2 className="text-primary mb-3">
+                    <i className="fa fa-map-marker-alt me-2"></i>
+                    {getGreeting()}, {user?.nombreCompleto.split(' ')[0]}!
+                  </h2>
+                  <p className="text-muted lead mb-3">¿Listo para tu próxima aventura?</p>
+                  <div className="d-flex flex-column flex-sm-row gap-2">
+                    <span className="badge bg-light text-dark px-3 py-2">
+                      <i className="fas fa-envelope me-2"></i>
+                      {user?.email}
+                    </span>
+                    <span className="badge bg-primary px-3 py-2">
+                      <i className="fas fa-user me-2"></i>
+                      {user?.rol === 'ADMIN' ? 'Administrador' : 'Usuario'}
+                    </span>
+                  </div>
+                </div>
+                <div className="col-lg-4 text-center mt-3 mt-lg-0">
+                  <div className="d-flex align-items-center justify-content-center gap-3">
+                    <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                         style={{ width: '60px', height: '60px', fontSize: '1.5rem' }}>
+                      {getInitials(user?.nombreCompleto || '')}
+                    </div>
+                    <button 
+                      className="btn btn-outline-danger"
+                      onClick={handleLogout}
+                    >
+                      <i className="fas fa-sign-out-alt me-2"></i>
+                      Cerrar Sesión
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <button className="logout-btn" onClick={handleLogout}>
-            <i className="fas fa-sign-out-alt"></i> Cerrar Sesión
-          </button>
-        </div>
-      </div>
 
-      <div className="dashboard-content">
-        <div className="dashboard-card">
-          <div className="card-icon">
-            <i className="fas fa-map-marked-alt"></i>
+          {/* Features Grid */}
+          <div className="row g-4">
+            <FeatureCard
+              icon="fas fa-map-marked-alt"
+              title="Explorar Destinos"
+              description="Descubre nuevos lugares y planifica tu próxima aventura con nuestras recomendaciones personalizadas."
+              onClick={() => showComingSoon('Explorar Destinos')}
+            />
+            <FeatureCard
+              icon="fas fa-calendar-alt"
+              title="Mis Viajes"
+              description="Gestiona tus viajes, reservas y itinerarios en un solo lugar."
+              onClick={() => showComingSoon('Mis Viajes')}
+            />
+            <FeatureCard
+              icon="fas fa-cog"
+              title="Configuración"
+              description="Personaliza tu experiencia y gestiona la configuración de tu cuenta."
+              onClick={() => showComingSoon('Configuración')}
+            />
           </div>
-          <h3 className="card-title">Explorar Destinos</h3>
-          <p className="card-description">
-            Descubre nuevos lugares y planifica tu próxima aventura con nuestras recomendaciones personalizadas.
-          </p>
-          <button 
-            className="card-btn" 
-            onClick={() => showComingSoon('Explorar Destinos')}
-          >
-            Explorar Ahora
-          </button>
-        </div>
-
-        <div className="dashboard-card">
-          <div className="card-icon">
-            <i className="fas fa-calendar-alt"></i>
-          </div>
-          <h3 className="card-title">Mis Viajes</h3>
-          <p className="card-description">
-            Gestiona tus viajes, reservas y itinerarios en un solo lugar.
-          </p>
-          <button 
-            className="card-btn" 
-            onClick={() => showComingSoon('Mis Viajes')}
-          >
-            Ver Mis Viajes
-          </button>
-        </div>
-
-        <div className="dashboard-card">
-          <div className="card-icon">
-            <i className="fas fa-cog"></i>
-          </div>
-          <h3 className="card-title">Configuración</h3>
-          <p className="card-description">
-            Personaliza tu experiencia y gestiona la configuración de tu cuenta.
-          </p>
-          <button 
-            className="card-btn" 
-            onClick={() => showComingSoon('Configuración')}
-          >
-            Configurar
-          </button>
         </div>
       </div>
     </div>

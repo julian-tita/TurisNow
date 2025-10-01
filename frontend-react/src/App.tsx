@@ -6,6 +6,9 @@ import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home';              // <- Home (index)
 import About from './pages/About';            // <- About page
+import Explorar from './pages/Explorar';
+import ExperienciasListado from './pages/ExperienciasListado';
+import ExperienciaDetalle from './pages/ExperienciaDetalle';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
@@ -29,6 +32,11 @@ function App() {
 
             {/* About page */}
             <Route path="/about" element={<About />} />
+
+            {/* Experiences */}
+            <Route path="/explorar" element={<Explorar />} />
+            <Route path="/experiencias" element={<ExperienciasListado />} />
+            <Route path="/experiencias/:id" element={<ExperienciaDetalle />} />
 
             {/* Auth */}
             <Route path="/login" element={<Login />} />
