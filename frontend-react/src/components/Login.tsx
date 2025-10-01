@@ -1,166 +1,247 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import './AuthComponents.css';
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
-  const [localSuccess, setLocalSuccess] = useState<string | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const { login, isLoading, error } = useAuth();
+  const { login, error: authError, clearError } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Limpiar errores del contexto cuando se monte el componente Login
+    clearError();
+  }, [clearError]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    // Limpiar errores cuando el usuario empiece a escribir
+    if (error) setError('');
+    if (errors.length > 0) setErrors([]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLocalError(null);
-    setLocalSuccess(null);
+    setErrors([]);
+    setError('');
+    setIsLoading(true);
 
-    // Validaciones básicas
-    if (!username.trim() || !password) {
-      setLocalError('Por favor, completa todos los campos');
-      return;
+    // Validaciones
+    const newErrors: string[] = [];
+    if (!formData.email.trim() || !formData.password) {
+      newErrors.push('Por favor, completa todos los campos');
     }
 
-    if (username.length < 3) {
-      setLocalError('El nombre de usuario debe tener al menos 3 caracteres');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (formData.email && !emailRegex.test(formData.email)) {
+      newErrors.push('Por favor, ingresa un correo electrónico válido');
+    }
+
+    if (formData.password.length < 6) {
+      newErrors.push('La contraseña debe tener al menos 6 caracteres');
+    }
+
+    if (newErrors.length > 0) {
+      setErrors(newErrors);
+      setIsLoading(false);
       return;
     }
 
     try {
-      const success = await login(username.trim(), password);
+      // Mapear email a username para mantener compatibilidad con backend
+      const success = await login(formData.email.trim(), formData.password);
       
       if (success) {
-        setLocalSuccess('¡Inicio de sesión exitoso!');
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1000);
+        navigate('/dashboard');
       } else {
-        setLocalError('Credenciales inválidas. Verifica tu usuario y contraseña');
+        setError(authError || 'Credenciales inválidas. Verifica tu correo y contraseña');
       }
     } catch (err: any) {
-      setLocalError(err.message || 'Error al iniciar sesión');
+      const errorMessage = err.response?.data?.message || err.message || 'Error al iniciar sesión';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const togglePassword = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const clearMessages = () => {
-    setLocalError(null);
-    setLocalSuccess(null);
-  };
-
   return (
-    <div className="auth-container">
-      <div className="background-decoration">
-        <div className="floating-shapes">
-          <div className="shape shape-1"></div>
-          <div className="shape shape-2"></div>
-          <div className="shape shape-3"></div>
-          <div className="shape shape-4"></div>
-        </div>
-      </div>
-      
-      <div className="auth-card">
-        <div className="auth-header">
-          <div className="logo">
-            <i className="fas fa-map-marked-alt"></i>
-            <h1>TurisNow</h1>
+    <div className="auth-container" style={{ paddingTop: '120px' }}>
+      <div className="container-fluid">
+        <div className="row min-vh-100">
+          {/* Columna izquierda - Formulario */}
+          <div className="col-lg-6 d-flex align-items-center justify-content-center p-4">
+            <div className="auth-form w-100">
+              <div className="text-center mb-4">
+                <Link to="/" className="text-decoration-none">
+                  <h2 className="text-primary mb-3">
+                    <i className="fa fa-map-marker-alt me-2"></i>
+                    TurisNow
+                  </h2>
+                </Link>
+                <p className="text-muted">Bienvenido de vuelta</p>
+              </div>
+
+              {/* Pop-up de error */}
+              {error && (
+                <div style={{ 
+                    padding: '10px', 
+                    backgroundColor: '#f8d7da', 
+                    color: '#721c24', 
+                    border: '1px solid #f5c6cb', 
+                    borderRadius: '5px', 
+                    marginBottom: '15px' 
+                }}>
+                    {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit}>
+                {/* Correo electrónico */}
+                <div className="mb-3">
+                  <label htmlFor="email" className="form-label">
+                    <i className="fas fa-envelope me-2 text-primary"></i>
+                    Correo electrónico
+                  </label>
+                  <input
+                    type="email"
+                    className="form-control form-control-lg"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="tu@email.com"
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+
+                {/* Contraseña */}
+                <div className="mb-3">
+                  <label htmlFor="password" className="form-label">
+                    <i className="fas fa-lock me-2 text-primary"></i>
+                    Contraseña
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className="form-control form-control-lg"
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Ingresa tu contraseña"
+                      autoComplete="current-password"
+                      required
+                    />
+                    <button
+                      className="btn btn-outline-secondary"
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Opciones adicionales */}
+                <div className="row mb-3">
+                  <div className="col-6">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="rememberMe"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="rememberMe">
+                        Recordarme
+                      </label>
+                    </div>
+                  </div>
+                  <div className="col-6 text-end">
+                    <button 
+                      type="button" 
+                      className="btn btn-link p-0 text-primary text-decoration-none"
+                      onClick={() => {
+                        // TODO: Implementar funcionalidad de recuperación de contraseña
+                        alert('Funcionalidad de recuperación de contraseña próximamente');
+                      }}
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </div>
+                </div>
+
+                {/* Errores */}
+                {errors.length > 0 && (
+                  <div className="alert alert-danger">
+                    <ul className="mb-0">
+                      {errors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Botón de inicio de sesión */}
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-lg w-100 mb-3"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin me-2"></i>
+                      Iniciando sesión...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-sign-in-alt me-2"></i>
+                      Iniciar Sesión
+                    </>
+                  )}
+                </button>
+
+                {/* Link a registro */}
+                <div className="text-center">
+                  <p className="mb-0">
+                    ¿No tienes una cuenta?{' '}
+                    <Link to="/register" className="text-primary text-decoration-none fw-semibold">
+                      Regístrate aquí
+                    </Link>
+                  </p>
+                </div>
+              </form>
+            </div>
           </div>
-          <p className="subtitle">Descubre el mundo con nosotros</p>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="username">
-              <i className="fas fa-user"></i>
-              Nombre de usuario
-            </label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => {
-                setUsername(e.target.value);
-                clearMessages();
-              }}
-              placeholder="Ingresa tu nombre de usuario"
-              autoComplete="username"
-              required
-            />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="password">
-              <i className="fas fa-lock"></i>
-              Contraseña
-            </label>
-            <div className="password-input">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                id="password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  clearMessages();
-                }}
-                placeholder="Ingresa tu contraseña"
-                autoComplete="current-password"
-                required
+
+          {/* Columna derecha - Imagen/Branding */}
+          <div className="col-lg-6 d-none d-lg-flex align-items-center justify-content-center bg-light">
+            <div className="text-center p-5">
+              <img
+                src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1170&auto=format&fit=crop"
+                alt="Viajes"
+                className="img-fluid rounded-3 mb-4"
+                style={{ maxHeight: '400px', objectFit: 'cover' }}
               />
-              <button
-                type="button"
-                className="toggle-password"
-                onClick={togglePassword}
-              >
-                <i className={`fas fa-${showPassword ? 'eye-slash' : 'eye'}`}></i>
-              </button>
+              <h3 className="text-primary mb-3">¡Bienvenido de vuelta!</h3>
+              <p className="text-muted lead">
+                Continúa explorando destinos increíbles y vive nuevas aventuras con TurisNow.
+              </p>
             </div>
           </div>
-          
-          <div className="form-options">
-            <label className="remember-me">
-              <input
-                type="checkbox"
-                id="rememberMe"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              <span className="checkmark"></span>
-              Recordarme
-            </label>
-            <a href="#" className="forgot-password">¿Olvidaste tu contraseña?</a>
-          </div>
-          
-          <button
-            type="submit"
-            className={`auth-btn ${isLoading ? 'loading' : ''}`}
-            disabled={isLoading}
-          >
-            <span className="btn-text">Iniciar Sesión</span>
-            <div className="spinner"></div>
-          </button>
-          
-          {(localError || error) && (
-            <div className="error-message" style={{ display: 'block' }}>
-              {localError || error}
-            </div>
-          )}
-          
-          {localSuccess && (
-            <div className="success-message" style={{ display: 'block' }}>
-              {localSuccess}
-            </div>
-          )}
-        </form>
-        
-        <div className="auth-footer">
-          <p>¿No tienes una cuenta? <Link to="/register" className="auth-link">Regístrate aquí</Link></p>
         </div>
       </div>
     </div>
