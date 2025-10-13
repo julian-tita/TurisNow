@@ -1,0 +1,162 @@
+package app.TurisNow.service;
+
+import app.TurisNow.dto.ExperienciaDetalleDTO;
+import app.TurisNow.dto.ExperienciaListadoDTO;
+import app.TurisNow.model.Experiencia;
+import app.TurisNow.model.Experiencia.Categoria;
+import app.TurisNow.model.Salida;
+import app.TurisNow.repository.ExperienciaRepository;
+import app.TurisNow.repository.SalidaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class ExperienciaService {
+    
+    private final ExperienciaRepository experienciaRepository;
+    private final SalidaRepository salidaRepository;
+    
+    /**
+     * Listar experiencias con filtros opcionales
+     */
+    public Page<ExperienciaListadoDTO> listarExperiencias(
+            String categoria, 
+            String ubicacion, 
+            Pageable pageable) {
+        
+        Page<Experiencia> experiencias;
+        
+        // Aplicar filtros según los parámetros
+        if (categoria != null && !categoria.isEmpty() && ubicacion != null && !ubicacion.isEmpty()) {
+            // Ambos filtros
+            Categoria cat = mapearCategoria(categoria);
+            experiencias = experienciaRepository.findByCategoriaAndUbicacion(cat, ubicacion, pageable);
+        } else if (categoria != null && !categoria.isEmpty()) {
+            // Solo categoría
+            Categoria cat = mapearCategoria(categoria);
+            experiencias = experienciaRepository.findByCategoria(cat, pageable);
+        } else if (ubicacion != null && !ubicacion.isEmpty()) {
+            // Solo ubicación
+            experiencias = experienciaRepository.findByUbicacion(ubicacion, pageable);
+        } else {
+            // Sin filtros
+            experiencias = experienciaRepository.findAll(pageable);
+        }
+        
+        return experiencias.map(this::mapearAListadoDTO);
+    }
+    
+    /**
+     * Obtener detalle de una experiencia por ID
+     */
+    public ExperienciaDetalleDTO obtenerExperienciaPorId(Long id) {
+        Experiencia experiencia = experienciaRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Experiencia no encontrada con id: " + id));
+        
+        return mapearADetalleDTO(experiencia);
+    }
+    
+    /**
+     * Mapear Experiencia a ExperienciaListadoDTO
+     */
+    private ExperienciaListadoDTO mapearAListadoDTO(Experiencia experiencia) {
+        ExperienciaListadoDTO dto = new ExperienciaListadoDTO();
+        dto.setId(experiencia.getId());
+        dto.setTitulo(experiencia.getTitulo());
+        dto.setDescripcion(experiencia.getDescripcion());
+        dto.setPrecio(experiencia.getPrecio());
+        dto.setMoneda(experiencia.getMoneda().name());
+        dto.setCategoria(experiencia.getCategoria().getValor());
+        dto.setImagenUrl(experiencia.getImagenUrl());
+        dto.setTags(experiencia.getTags());
+        
+        // Mapear ubicación
+        ExperienciaListadoDTO.UbicacionDTO ubicacionDTO = new ExperienciaListadoDTO.UbicacionDTO();
+        ubicacionDTO.setCiudad(experiencia.getUbicacion().getCiudad());
+        ubicacionDTO.setRegion(experiencia.getUbicacion().getRegion());
+        ubicacionDTO.setPais(experiencia.getUbicacion().getPais());
+        dto.setUbicacion(ubicacionDTO);
+        
+        // Contar salidas disponibles
+        Integer salidas = salidaRepository.countSalidasDisponibles(
+            experiencia.getId(), 
+            LocalDateTime.now()
+        );
+        dto.setProximasSalidas(salidas);
+        
+        return dto;
+    }
+    
+    /**
+     * Mapear Experiencia a ExperienciaDetalleDTO
+     */
+    private ExperienciaDetalleDTO mapearADetalleDTO(Experiencia experiencia) {
+        ExperienciaDetalleDTO dto = new ExperienciaDetalleDTO();
+        dto.setId(experiencia.getId());
+        dto.setTitulo(experiencia.getTitulo());
+        dto.setDescripcion(experiencia.getDescripcion());
+        dto.setPrecio(experiencia.getPrecio());
+        dto.setMoneda(experiencia.getMoneda().name());
+        dto.setCategoria(experiencia.getCategoria().getValor());
+        dto.setImagenUrl(experiencia.getImagenUrl());
+        dto.setTags(experiencia.getTags());
+        
+        // Mapear ubicación
+        ExperienciaDetalleDTO.UbicacionDTO ubicacionDTO = new ExperienciaDetalleDTO.UbicacionDTO();
+        ubicacionDTO.setCiudad(experiencia.getUbicacion().getCiudad());
+        ubicacionDTO.setRegion(experiencia.getUbicacion().getRegion());
+        ubicacionDTO.setPais(experiencia.getUbicacion().getPais());
+        dto.setUbicacion(ubicacionDTO);
+        
+        // Mapear salidas disponibles
+        List<Salida> salidas = salidaRepository.findSalidasDisponibles(
+            experiencia.getId(), 
+            LocalDateTime.now()
+        );
+        
+        List<ExperienciaDetalleDTO.SalidaDTO> salidasDTO = salidas.stream()
+            .map(this::mapearSalidaDTO)
+            .collect(Collectors.toList());
+        
+        dto.setSalidas(salidasDTO);
+        
+        return dto;
+    }
+    
+    /**
+     * Mapear Salida a SalidaDTO
+     */
+    private ExperienciaDetalleDTO.SalidaDTO mapearSalidaDTO(Salida salida) {
+        ExperienciaDetalleDTO.SalidaDTO dto = new ExperienciaDetalleDTO.SalidaDTO();
+        dto.setId(salida.getId());
+        dto.setFechaInicio(salida.getFechaInicio());
+        dto.setFechaFin(salida.getFechaFin());
+        dto.setCapacidadTotal(salida.getCapacidadTotal());
+        dto.setCapacidadDisponible(salida.getCapacidadDisponible());
+        return dto;
+    }
+    
+    /**
+     * Mapear string de categoría a Enum
+     */
+    private Categoria mapearCategoria(String categoria) {
+        return switch (categoria.toLowerCase()) {
+            case "playa" -> Categoria.PLAYA;
+            case "montaña", "montana" -> Categoria.MONTANA;
+            case "aventura" -> Categoria.AVENTURA;
+            case "gastronomía", "gastronomia" -> Categoria.GASTRONOMIA;
+            case "cultura" -> Categoria.CULTURA;
+            default -> throw new IllegalArgumentException("Categoría no válida: " + categoria);
+        };
+    }
+}
+
