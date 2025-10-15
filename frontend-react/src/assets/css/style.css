@@ -3,6 +3,10 @@
    Todos los estilos de la aplicación en un solo archivo
    ═════════════════════════════════════════════════════ **********/
 
+/* Import additional component styles */
+@import url('./experiencias.css');
+@import url('./admin-components.css');
+
 /* ==================================================
    VARIABLES Y CONFIGURACIÓN BASE
    ================================================== */

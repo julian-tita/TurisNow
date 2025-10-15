@@ -1,113 +1,155 @@
-import React, { useState, useEffect } from 'react';
-
-interface Experience {
-  id: number;
-  titulo: string;
-  descripcion: string;
-  destino: string;
-  precio: number;
-  duracion: string;
-  categoria: string;
-  imagen?: string;
-  activo: boolean;
-  fechaCreacion?: string;
-}
+import React, { useState, useEffect, useCallback } from 'react';
+import { experienciaService } from '../../services/experienciaService';
+import { 
+  ExperienciaListadoDTO, 
+  ExperienciaDetalleDTO,
+  Categoria, 
+  PageResponse 
+} from '../../types/experiencia.types';
+import ExperienciaForm from './ExperienciaForm';
+import SalidasManagement from './SalidasManagement';
 
 const ExperiencesManagement: React.FC = () => {
-  const [experiences, setExperiences] = useState<Experience[]>([]);
+  // Estados principales
+  const [experiences, setExperiences] = useState<ExperienciaListadoDTO[]>([]);
+  const [pageResponse, setPageResponse] = useState<PageResponse<ExperienciaListadoDTO> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Estados de filtros y búsqueda
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState<string>('ALL');
+  const [filterCategory, setFilterCategory] = useState<Categoria | 'ALL'>('ALL');
+  const [currentPage, setCurrentPage] = useState(0);
+  
+  // Estados de modales
+  const [showForm, setShowForm] = useState(false);
+  const [showSalidas, setShowSalidas] = useState(false);
+  const [editingExperience, setEditingExperience] = useState<ExperienciaDetalleDTO | null>(null);
+  const [selectedExperienceId, setSelectedExperienceId] = useState<number | null>(null);
 
-  // Simular carga de experiencias (sustituir por llamada API real)
-  useEffect(() => {
-    const mockExperiences: Experience[] = [
-      {
-        id: 1,
-        titulo: 'Tour por Machu Picchu',
-        descripcion: 'Descubre la ciudad perdida de los Incas',
-        destino: 'Cusco, Perú',
-        precio: 450,
-        duracion: '3 días',
-        categoria: 'Aventura',
-        activo: true,
-        fechaCreacion: '2024-01-10'
-      },
-      {
-        id: 2,
-        titulo: 'Safari en Serengueti',
-        descripcion: 'Observa la vida salvaje africana',
-        destino: 'Tanzania',
-        precio: 1200,
-        duracion: '7 días',
-        categoria: 'Naturaleza',
-        activo: true,
-        fechaCreacion: '2024-02-15'
-      },
-      {
-        id: 3,
-        titulo: 'Tour Gastronómico en Tokio',
-        descripcion: 'Explora la cocina japonesa auténtica',
-        destino: 'Tokio, Japón',
-        precio: 300,
-        duracion: '1 día',
-        categoria: 'Gastronomía',
-        activo: true,
-        fechaCreacion: '2024-03-20'
-      },
-      {
-        id: 4,
-        titulo: 'Buceo en la Gran Barrera',
-        descripcion: 'Sumérgete en el arrecife más grande del mundo',
-        destino: 'Queensland, Australia',
-        precio: 800,
-        duracion: '5 días',
-        categoria: 'Aventura',
-        activo: false,
-        fechaCreacion: '2024-04-05'
-      },
-      {
-        id: 5,
-        titulo: 'Ruta del Vino en Toscana',
-        descripcion: 'Degusta los mejores vinos italianos',
-        destino: 'Toscana, Italia',
-        precio: 600,
-        duracion: '4 días',
-        categoria: 'Gastronomía',
-        activo: true,
-        fechaCreacion: '2024-05-12'
-      }
-    ];
-
-    setTimeout(() => {
-      setExperiences(mockExperiences);
+  // Cargar experiencias desde el backend
+  const loadExperiences = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const filters = {
+        categoria: filterCategory !== 'ALL' ? filterCategory : undefined,
+        ubicacion: searchTerm.trim() || undefined
+      };
+      
+      const response = await experienciaService.getAllExperiencias(filters);
+      
+      setPageResponse(response);
+      setExperiences(response.content);
+    } catch (err) {
+      console.error('Error loading experiences:', err);
+      setError('Error al cargar las experiencias. Por favor intenta de nuevo.');
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, []);
+    }
+  }, [filterCategory, searchTerm]);
 
-  const categories = ['ALL', ...Array.from(new Set(experiences.map(e => e.categoria)))];
+  // Efecto para cargar datos iniciales y cuando cambien los filtros
+  useEffect(() => {
+    loadExperiences();
+  }, [currentPage, filterCategory, loadExperiences]);
 
-  const filteredExperiences = experiences.filter(exp => {
-    const matchesSearch = 
-      exp.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      exp.destino.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      exp.descripcion.toLowerCase().includes(searchTerm.toLowerCase());
+  // Efecto para búsqueda con debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCurrentPage(0); // Reset a primera página
+      loadExperiences();
+    }, 500);
 
-    const matchesCategory = filterCategory === 'ALL' || exp.categoria === filterCategory;
+    return () => clearTimeout(timer);
+  }, [searchTerm, loadExperiences]);
 
-    return matchesSearch && matchesCategory;
-  });
+  // Available categories for filter
+  const categories: Array<{ value: Categoria | 'ALL'; label: string }> = [
+    { value: 'ALL', label: 'Todas las categorías' },
+    { value: 'AVENTURA', label: '🏔️ Aventura' },
+    { value: 'CULTURA', label: '🏛️ Cultura' },
+    { value: 'GASTRONOMIA', label: '🍽️ Gastronomía' },
+    { value: 'PLAYA', label: '🏖️ Playa' },
+    { value: 'MONTANA', label: '⛰️ Montaña' }
+  ];
 
-  const handleToggleStatus = (experienceId: number) => {
-    setExperiences(experiences.map(exp => 
-      exp.id === experienceId ? { ...exp, activo: !exp.activo } : exp
-    ));
+  // Handlers for CRUD operations
+  const handleNewExperience = () => {
+    setEditingExperience(null);
+    setShowForm(true);
   };
 
-  const handleDeleteExperience = (experienceId: number) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar esta experiencia?')) {
-      setExperiences(experiences.filter(exp => exp.id !== experienceId));
+  const handleEditExperience = async (experiencia: ExperienciaListadoDTO) => {
+    try {
+      setLoading(true);
+      const detail = await experienciaService.getExperienciaById(experiencia.id);
+      setEditingExperience(detail);
+      setShowForm(true);
+    } catch (err) {
+      console.error('Error loading experiencia detail:', err);
+      setError('Error al cargar los detalles de la experiencia');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleToggleStatus = async (experienceId: number) => {
+    try {
+      await experienciaService.toggleExperienciaStatus(experienceId);
+      await loadExperiences(); // Reload to get updated data
+    } catch (err) {
+      console.error('Error toggling experiencia status:', err);
+      setError('Error al cambiar el estado de la experiencia');
+    }
+  };
+
+  const handleDeleteExperience = async (experienceId: number) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta experiencia? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    try {
+      await experienciaService.deleteExperiencia(experienceId);
+      await loadExperiences(); // Reload data after deletion
+    } catch (err) {
+      console.error('Error deleting experiencia:', err);
+      setError('Error al eliminar la experiencia');
+    }
+  };
+
+  const handleManageSalidas = (experienciaId: number) => {
+    setSelectedExperienceId(experienciaId);
+    setShowSalidas(true);
+  };
+
+  const handleFormSave = async () => {
+    setShowForm(false);
+    setEditingExperience(null);
+    await loadExperiences(); // Reload data after save
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setEditingExperience(null);
+  };
+
+  const handleSalidasClose = () => {
+    setShowSalidas(false);
+    setSelectedExperienceId(null);
+  };
+
+  // Pagination handlers
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 0 && pageResponse && newPage < pageResponse.totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilterCategory(e.target.value as Categoria | 'ALL');
+    setCurrentPage(0); // Reset to first page
   };
 
   if (loading) {
@@ -137,16 +179,16 @@ const ExperiencesManagement: React.FC = () => {
           <select 
             className="form-select"
             value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
+            onChange={handleCategoryChange}
           >
             {categories.map(cat => (
-              <option key={cat} value={cat}>
-                {cat === 'ALL' ? 'Todas las categorías' : cat}
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
               </option>
             ))}
           </select>
 
-          <button className="btn btn-primary">
+          <button onClick={handleNewExperience} className="btn btn-primary">
             <i className="fas fa-plus me-2"></i>
             Nueva Experiencia
           </button>
@@ -170,8 +212,8 @@ const ExperiencesManagement: React.FC = () => {
             <i className="fas fa-check-circle"></i>
           </div>
           <div className="stat-content">
-            <span className="stat-label">Activas</span>
-            <span className="stat-value">{experiences.filter(e => e.activo).length}</span>
+            <span className="stat-label">En esta página</span>
+            <span className="stat-value">{experiences.length}</span>
           </div>
         </div>
 
@@ -180,8 +222,8 @@ const ExperiencesManagement: React.FC = () => {
             <i className="fas fa-tags"></i>
           </div>
           <div className="stat-content">
-            <span className="stat-label">Categorías</span>
-            <span className="stat-value">{categories.length - 1}</span>
+            <span className="stat-label">Total</span>
+            <span className="stat-value">{pageResponse?.totalElements || 0}</span>
           </div>
         </div>
 
@@ -192,7 +234,10 @@ const ExperiencesManagement: React.FC = () => {
           <div className="stat-content">
             <span className="stat-label">Precio Promedio</span>
             <span className="stat-value">
-              ${Math.round(experiences.reduce((acc, e) => acc + e.precio, 0) / experiences.length)}
+              {experiences.length > 0 
+                ? `$${Math.round(experiences.reduce((acc, e) => acc + e.precio, 0) / experiences.length)}`
+                : '$0'
+              }
             </span>
           </div>
         </div>
@@ -205,80 +250,124 @@ const ExperiencesManagement: React.FC = () => {
             <tr>
               <th>ID</th>
               <th>Experiencia</th>
-              <th>Destino</th>
+              <th>Ubicación</th>
               <th>Categoría</th>
               <th>Precio</th>
-              <th>Duración</th>
-              <th>Estado</th>
+              <th>Salidas</th>
+              <th>Tags</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {filteredExperiences.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={8} className="text-center">
+                  <div className="loading-container">
+                    <i className="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                    <p>Cargando experiencias...</p>
+                  </div>
+                </td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={8} className="text-center">
+                  <div className="error-container">
+                    <i className="fas fa-exclamation-triangle fa-2x text-danger mb-2"></i>
+                    <p className="text-danger">{error}</p>
+                    <button onClick={loadExperiences} className="btn btn-sm btn-primary">
+                      <i className="fas fa-redo me-1"></i>
+                      Reintentar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ) : experiences.length === 0 ? (
               <tr>
                 <td colSpan={8} className="text-center">
                   <div className="no-results">
                     <i className="fas fa-search fa-3x text-muted mb-3"></i>
                     <p>No se encontraron experiencias</p>
+                    <button onClick={handleNewExperience} className="btn btn-primary">
+                      <i className="fas fa-plus me-2"></i>
+                      Crear Primera Experiencia
+                    </button>
                   </div>
                 </td>
               </tr>
             ) : (
-              filteredExperiences.map(exp => (
+              experiences.map(exp => (
                 <tr key={exp.id}>
                   <td>{exp.id}</td>
                   <td>
                     <div className="experience-cell">
                       <div className="experience-image">
-                        <i className="fas fa-image"></i>
+                        {exp.imagenUrl ? (
+                          <img src={exp.imagenUrl} alt={exp.titulo} />
+                        ) : (
+                          <i className="fas fa-image"></i>
+                        )}
                       </div>
                       <div className="experience-info">
                         <span className="experience-title">{exp.titulo}</span>
-                        <span className="experience-description">{exp.descripcion}</span>
+                        <span className="experience-description">
+                          {exp.descripcion.length > 80 
+                            ? `${exp.descripcion.substring(0, 80)}...` 
+                            : exp.descripcion
+                          }
+                        </span>
                       </div>
                     </div>
                   </td>
                   <td>
                     <i className="fas fa-map-marker-alt text-danger me-2"></i>
-                    {exp.destino}
+                    {exp.ubicacion.ciudad}, {exp.ubicacion.pais}
                   </td>
                   <td>
                     <span className="category-badge">{exp.categoria}</span>
                   </td>
-                  <td className="price-cell">${exp.precio}</td>
-                  <td>
-                    <i className="far fa-clock me-2 text-muted"></i>
-                    {exp.duracion}
+                  <td className="price-cell">
+                    {exp.precio.toLocaleString()} {exp.moneda}
                   </td>
                   <td>
-                    <span className={`status-badge ${exp.activo ? 'active' : 'inactive'}`}>
-                      {exp.activo ? 'Activa' : 'Inactiva'}
+                    <i className="fas fa-calendar-alt me-2 text-primary"></i>
+                    {exp.proximasSalidas || 0} salidas
+                  </td>
+                  <td>
+                    <span className="tags-preview">
+                      {exp.tags.slice(0, 2).map((tag, idx) => (
+                        <span key={idx} className="tag-small">{tag}</span>
+                      ))}
+                      {exp.tags.length > 2 && (
+                        <span className="tag-small more">+{exp.tags.length - 2}</span>
+                      )}
                     </span>
                   </td>
                   <td>
                     <div className="action-buttons">
                       <button
-                        className="btn-icon btn-view"
-                        title="Ver detalles"
+                        className="btn-icon btn-calendar"
+                        title="Gestionar salidas"
+                        onClick={() => handleManageSalidas(exp.id)}
                       >
-                        <i className="fas fa-eye"></i>
+                        <i className="fas fa-calendar-alt"></i>
                       </button>
                       <button
                         className="btn-icon btn-edit"
-                        title="Editar"
+                        title="Editar experiencia"
+                        onClick={() => handleEditExperience(exp)}
                       >
                         <i className="fas fa-edit"></i>
                       </button>
                       <button
-                        className={`btn-icon ${exp.activo ? 'btn-pause' : 'btn-play'}`}
-                        title={exp.activo ? 'Desactivar' : 'Activar'}
+                        className="btn-icon btn-toggle"
+                        title="Activar/Desactivar"
                         onClick={() => handleToggleStatus(exp.id)}
                       >
-                        <i className={`fas fa-${exp.activo ? 'pause' : 'play'}`}></i>
+                        <i className="fas fa-toggle-on"></i>
                       </button>
                       <button
                         className="btn-icon btn-delete"
-                        title="Eliminar"
+                        title="Eliminar experiencia"
                         onClick={() => handleDeleteExperience(exp.id)}
                       >
                         <i className="fas fa-trash"></i>
@@ -293,17 +382,48 @@ const ExperiencesManagement: React.FC = () => {
       </div>
 
       {/* Paginación */}
-      <div className="pagination">
-        <button className="btn btn-sm btn-outline-primary">
-          <i className="fas fa-chevron-left"></i>
-        </button>
-        <button className="btn btn-sm btn-primary">1</button>
-        <button className="btn btn-sm btn-outline-primary">2</button>
-        <button className="btn btn-sm btn-outline-primary">3</button>
-        <button className="btn btn-sm btn-outline-primary">
-          <i className="fas fa-chevron-right"></i>
-        </button>
-      </div>
+      {pageResponse && pageResponse.totalPages > 1 && (
+        <div className="pagination">
+          <button 
+            className="pagination-btn"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={pageResponse.first}
+          >
+            <i className="fas fa-chevron-left"></i>
+          </button>
+          
+          <div className="pagination-info">
+            Página {currentPage + 1} de {pageResponse.totalPages}
+            <span className="total-info">
+              ({pageResponse.totalElements} experiencias en total)
+            </span>
+          </div>
+          
+          <button 
+            className="pagination-btn"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={pageResponse.last}
+          >
+            <i className="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      )}
+
+      {/* Modales */}
+      {showForm && (
+        <ExperienciaForm
+          experiencia={editingExperience}
+          onSave={handleFormSave}
+          onCancel={handleFormCancel}
+        />
+      )}
+
+      {showSalidas && selectedExperienceId && (
+        <SalidasManagement
+          experienciaId={selectedExperienceId}
+          onClose={handleSalidasClose}
+        />
+      )}
     </div>
   );
 };

@@ -2,8 +2,11 @@ package app.TurisNow.service;
 
 import app.TurisNow.dto.ExperienciaDetalleDTO;
 import app.TurisNow.dto.ExperienciaListadoDTO;
+import app.TurisNow.dto.ExperienciaRequest;
 import app.TurisNow.model.Experiencia;
 import app.TurisNow.model.Experiencia.Categoria;
+
+import app.TurisNow.model.Ubicacion;
 import app.TurisNow.model.Salida;
 import app.TurisNow.repository.ExperienciaRepository;
 import app.TurisNow.repository.SalidaRepository;
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -146,16 +150,115 @@ public class ExperienciaService {
     }
     
     /**
+     * Crear nueva experiencia
+     */
+    @Transactional
+    public ExperienciaDetalleDTO crearExperiencia(ExperienciaRequest request) {
+        Experiencia experiencia = new Experiencia();
+        
+        // Mapear datos básicos
+        experiencia.setTitulo(request.getTitulo());
+        experiencia.setDescripcion(request.getDescripcion());
+        experiencia.setPrecio(request.getPrecio());
+        experiencia.setMoneda(mapearMoneda(request.getMoneda()));
+        experiencia.setCategoria(mapearCategoria(request.getCategoria()));
+        experiencia.setImagenUrl(request.getImagenUrl());
+        experiencia.setTags(request.getTags() != null ? request.getTags() : new ArrayList<>());
+        
+        // Mapear ubicación
+        Ubicacion ubicacion = new Ubicacion();
+        ubicacion.setCiudad(request.getUbicacion().getCiudad());
+        ubicacion.setRegion(request.getUbicacion().getRegion());
+        ubicacion.setPais(request.getUbicacion().getPais());
+        experiencia.setUbicacion(ubicacion);
+        
+        // Guardar
+        experiencia = experienciaRepository.save(experiencia);
+        
+        return mapearADetalleDTO(experiencia);
+    }
+    
+    /**
+     * Actualizar experiencia existente
+     */
+    @Transactional
+    public ExperienciaDetalleDTO actualizarExperiencia(Long id, ExperienciaRequest request) {
+        Experiencia experiencia = experienciaRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Experiencia no encontrada con id: " + id));
+        
+        // Actualizar datos básicos
+        experiencia.setTitulo(request.getTitulo());
+        experiencia.setDescripcion(request.getDescripcion());
+        experiencia.setPrecio(request.getPrecio());
+        experiencia.setMoneda(mapearMoneda(request.getMoneda()));
+        experiencia.setCategoria(mapearCategoria(request.getCategoria()));
+        experiencia.setImagenUrl(request.getImagenUrl());
+        experiencia.setTags(request.getTags() != null ? request.getTags() : new ArrayList<>());
+        
+        // Actualizar ubicación
+        if (experiencia.getUbicacion() == null) {
+            experiencia.setUbicacion(new Ubicacion());
+        }
+        experiencia.getUbicacion().setCiudad(request.getUbicacion().getCiudad());
+        experiencia.getUbicacion().setRegion(request.getUbicacion().getRegion());
+        experiencia.getUbicacion().setPais(request.getUbicacion().getPais());
+        
+        // Guardar
+        experiencia = experienciaRepository.save(experiencia);
+        
+        return mapearADetalleDTO(experiencia);
+    }
+    
+    /**
+     * Eliminar experiencia
+     */
+    @Transactional
+    public void eliminarExperiencia(Long id) {
+        if (!experienciaRepository.existsById(id)) {
+            throw new RuntimeException("Experiencia no encontrada con id: " + id);
+        }
+        experienciaRepository.deleteById(id);
+    }
+    
+    /**
+     * Toggle estado de experiencia (activar/desactivar)
+     * Por ahora solo retorna la experiencia ya que no tenemos campo de estado
+     */
+    @Transactional
+    public ExperienciaDetalleDTO toggleEstadoExperiencia(Long id) {
+        Experiencia experiencia = experienciaRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Experiencia no encontrada con id: " + id));
+        
+        // TODO: Implementar campo 'activa' en el modelo Experiencia
+        // Por ahora solo retornamos la experiencia
+        
+        return mapearADetalleDTO(experiencia);
+    }
+
+    /**
      * Mapear string de categoría a Enum
      */
     private Categoria mapearCategoria(String categoria) {
-        return switch (categoria.toLowerCase()) {
-            case "playa" -> Categoria.PLAYA;
-            case "montaña", "montana" -> Categoria.MONTANA;
-            case "aventura" -> Categoria.AVENTURA;
-            case "gastronomía", "gastronomia" -> Categoria.GASTRONOMIA;
-            case "cultura" -> Categoria.CULTURA;
+        return switch (categoria.toUpperCase()) {
+            case "PLAYA" -> Categoria.PLAYA;
+            case "MONTANA" -> Categoria.MONTANA;
+            case "AVENTURA" -> Categoria.AVENTURA;
+            case "GASTRONOMIA" -> Categoria.GASTRONOMIA;
+            case "CULTURA" -> Categoria.CULTURA;
             default -> throw new IllegalArgumentException("Categoría no válida: " + categoria);
+        };
+    }
+    
+    /**
+     * Mapear string de moneda a Enum
+     */
+    private Experiencia.Moneda mapearMoneda(String moneda) {
+        return switch (moneda.toUpperCase()) {
+            case "ARS" -> Experiencia.Moneda.ARS;
+            case "USD" -> Experiencia.Moneda.USD;
+            case "CLP" -> Experiencia.Moneda.CLP;
+            case "EUR" -> Experiencia.Moneda.EUR;
+            default -> throw new IllegalArgumentException("Moneda no válida: " + moneda);
         };
     }
 }

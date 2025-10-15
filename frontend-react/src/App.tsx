@@ -15,6 +15,7 @@ import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import DashboardAdmin from './components/admin/DashboardAdmin';
+import ExperienciaTest from './components/ExperienciaTest';
 
 import './assets/css/style.css';
 
@@ -43,6 +44,9 @@ function App() {
             {/* Auth */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+
+            {/* Test de conexión con backend */}
+            <Route path="/test-experiencias" element={<ExperienciaTest />} />
 
             {/* Protegida - Usuario normal */}
             <Route

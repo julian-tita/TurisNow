@@ -52,7 +52,7 @@ public class Experiencia {
     
     // Enums
     public enum Moneda {
-        ARS, USD
+        ARS, USD, CLP, EUR
     }
     
     public enum Categoria {

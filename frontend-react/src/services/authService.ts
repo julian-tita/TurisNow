@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:9090/api/auth';
+const API_BASE_URL = process.env.REACT_APP_API_URL 
+  ? `${process.env.REACT_APP_API_URL}/api/auth` 
+  : 'http://localhost:9090/api/auth';
 
 export interface LoginRequest {
   email: string;
