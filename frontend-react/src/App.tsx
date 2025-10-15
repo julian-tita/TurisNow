@@ -13,6 +13,8 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
+import DashboardAdmin from './components/admin/DashboardAdmin';
 
 import './assets/css/style.css';
 
@@ -42,13 +44,23 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Protegida */}
+            {/* Protegida - Usuario normal */}
             <Route
               path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
+              }
+            />
+
+            {/* Protegida - Admin */}
+            <Route
+              path="/admin/dashboard"
+              element={
+                <AdminRoute>
+                  <DashboardAdmin />
+                </AdminRoute>
               }
             />
 

@@ -13,7 +13,7 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { login, error: authError, clearError } = useAuth();
+  const { login, user, error: authError, clearError } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,7 +63,19 @@ const Login: React.FC = () => {
       const success = await login(formData.email.trim(), formData.password);
       
       if (success) {
-        navigate('/dashboard');
+        // Obtener el usuario actualizado del localStorage después del login exitoso
+        const storedUser = localStorage.getItem('turisnow_user');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          // Redirigir según el rol del usuario
+          if (userData.rol === 'ADMIN') {
+            navigate('/admin/dashboard');
+          } else {
+            navigate('/dashboard');
+          }
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setError(authError || 'Credenciales inválidas. Verifica tu correo y contraseña');
       }
