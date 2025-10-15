@@ -49,8 +49,8 @@ public class AuthService {
     }
     
     public AuthResponse login(LoginRequest request) {
-        // Buscar usuario por username
-        Usuario usuario = usuarioRepository.findByUsername(request.getUsername()).orElse(null);
+        // Buscar usuario por email
+        Usuario usuario = usuarioRepository.findByEmail(request.getEmail()).orElse(null);
         
         if (usuario == null) {
             return new AuthResponse("Usuario no encontrado");

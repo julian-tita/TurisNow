@@ -1,7 +1,7 @@
 const API_BASE_URL = 'http://localhost:9090/api/auth';
 
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -22,14 +22,14 @@ export interface AuthResponse {
 }
 
 class AuthService {
-  async login(username: string, password: string): Promise<AuthResponse> {
+  async login(email: string, password: string): Promise<AuthResponse> {
     try {
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
@@ -45,7 +45,7 @@ class AuthService {
       return data;
     } catch (error: any) {
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté ejecutándose en el puerto 8080');
+        throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté ejecutándose en el puerto 9090');
       }
       throw error;
     }
