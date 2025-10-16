@@ -13,7 +13,7 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { login, user, error: authError, clearError } = useAuth();
+  const { login, error: authError, clearError } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {

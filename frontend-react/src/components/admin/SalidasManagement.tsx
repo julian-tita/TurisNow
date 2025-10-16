@@ -49,6 +49,7 @@ const SalidasManagement: React.FC<SalidasManagementProps> = ({
 
   useEffect(() => {
     loadExperiencia();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [experienciaId]);
 
   // Handle form input changes

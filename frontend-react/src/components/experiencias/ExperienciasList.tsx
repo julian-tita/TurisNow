@@ -23,7 +23,6 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
   // Filtros
   const [filtroCategoria, setFiltroCategoria] = useState<Categoria | ''>('');
   const [filtroUbicacion, setFiltroUbicacion] = useState('');
-  const [busqueda, setBusqueda] = useState('');
   
   // Paginación
   const [currentPage, setCurrentPage] = useState(0);
@@ -49,6 +48,7 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
 
   useEffect(() => {
     loadExperiencias();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filtroCategoria, filtroUbicacion]);
 
   const loadExperiencias = async () => {
@@ -92,7 +92,6 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
   const clearFilters = () => {
     setFiltroCategoria('');
     setFiltroUbicacion('');
-    setBusqueda('');
     setCurrentPage(0);
   };
 

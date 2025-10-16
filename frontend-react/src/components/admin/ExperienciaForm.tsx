@@ -4,8 +4,7 @@ import {
   ExperienciaRequest, 
   ExperienciaDetalleDTO, 
   Categoria, 
-  Moneda, 
-  UbicacionDTO 
+  Moneda
 } from '../../types/experiencia.types';
 
 interface ExperienciaFormProps {

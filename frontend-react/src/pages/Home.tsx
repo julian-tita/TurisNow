@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import Hero from "../components/landing/Hero";
 import CategoryStrip from "../components/landing/CategoryStrip";
-import FeaturedGrid from "../components/landing/FeaturedGrid";
-import UpcomingDepartures from "../components/landing/UpcomingDepartures";
 import HowItWorks from "../components/landing/HowItWorks";
 import TrustBenefits from "../components/landing/TrustBenefits";
 import { getExperiences } from "../data/experiences";

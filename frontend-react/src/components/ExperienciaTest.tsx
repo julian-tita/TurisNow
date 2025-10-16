@@ -12,6 +12,7 @@ const ExperienciaTest: React.FC = () => {
   // Test de conexión al montar el componente
   useEffect(() => {
     testBackendConnection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const testBackendConnection = async () => {
