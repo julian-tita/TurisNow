@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { LikeProvider } from './contexts/LikeContext';
+import { CartProvider } from './contexts/CartContext';
 
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -9,6 +11,8 @@ import About from './pages/About';            // <- About page
 import Explorar from './pages/Explorar';
 import ExperienciasListado from './pages/ExperienciasListado';
 import ExperienciaDetalle from './pages/ExperienciaDetalle';
+import LikePage from './pages/LikePage';
+import CartPage from './pages/CartPage';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
@@ -22,11 +26,13 @@ import './assets/css/style.css';
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Header />
+      <LikeProvider>
+        <CartProvider>
+          <Router>
+            <Header />
 
-        <div className="App">
-          <Routes>
+            <div className="App">
+              <Routes>
             {/* 👉 Esta ruta permite /home */}
             <Route path="/home" element={<Home />} />
 
@@ -36,12 +42,14 @@ function App() {
             {/* About page */}
             <Route path="/about" element={<About />} />
 
-            {/* Experiences */}
-            <Route path="/explorar" element={<Explorar />} />
-            <Route path="/experiencias" element={<ExperienciasListado />} />
-            <Route path="/experiencias/:id" element={<ExperienciaDetalle />} />
+              {/* Experiences */}
+              <Route path="/explorar" element={<Explorar />} />
+              <Route path="/experiencias" element={<ExperienciasListado />} />
+              <Route path="/experiencias/:id" element={<ExperienciaDetalle />} />
 
-            {/* Auth */}
+              {/* Likes and Cart */}
+              <Route path="/likes" element={<LikePage />} />
+              <Route path="/cart" element={<CartPage />} />            {/* Auth */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
@@ -71,10 +79,12 @@ function App() {
             {/* Fallback a /home para rutas desconocidas */}
             <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
-        </div>
+            </div>
 
-        <Footer />
-      </Router>
+            <Footer />
+          </Router>
+        </CartProvider>
+      </LikeProvider>
     </AuthProvider>
   );
 }

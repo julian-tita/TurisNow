@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ExperienciaListadoDTO } from '../../types/experiencia.types';
+import { useLikes } from '../../contexts/LikeContext';
+import { useCart } from '../../contexts/CartContext';
 
 interface ExperienciaCardProps {
   experiencia: ExperienciaListadoDTO;
@@ -13,6 +15,10 @@ const ExperienciaCard: React.FC<ExperienciaCardProps> = ({
   className = '',
   showFullDescription = false
 }) => {
+  const { toggle: toggleLike, has: isLiked } = useLikes();
+  const { add: addToCart } = useCart();
+  
+  const isLikedState = isLiked(experiencia.id);
   const categorias: { [key: string]: string } = {
     'PLAYA': '🏖️ Playa',
     'MONTANA': '🏔️ Montaña',
@@ -44,6 +50,31 @@ const ExperienciaCard: React.FC<ExperienciaCardProps> = ({
     return `${text.substring(0, maxLength)}...`;
   };
 
+  const handleToggleLike = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    toggleLike({
+      id: experiencia.id,
+      titulo: experiencia.titulo,
+      precio: experiencia.precio,
+      imagenUrl: experiencia.imagenUrl,
+      categoria: experiencia.categoria
+    });
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    addToCart({
+      id: experiencia.id,
+      titulo: experiencia.titulo,
+      precio: experiencia.precio,
+      imagenUrl: experiencia.imagenUrl
+    }, 1);
+  };
+
   return (
     <div className={`experiencia-card ${className}`}>
       <div className="card-image">
@@ -71,6 +102,26 @@ const ExperienciaCard: React.FC<ExperienciaCardProps> = ({
             📅 {experiencia.proximasSalidas} salida{experiencia.proximasSalidas > 1 ? 's' : ''}
           </div>
         )}
+
+        {/* Quick actions overlay */}
+        <div className="tn-card-actions">
+          <button
+            onClick={handleToggleLike}
+            className={`tn-icon-button ${isLikedState ? 'liked' : ''}`}
+            aria-label={isLikedState ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+            title={isLikedState ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          >
+            <i className={`fa ${isLikedState ? 'fa-heart' : 'fa-heart-o'}`}></i>
+          </button>
+          <button
+            onClick={handleAddToCart}
+            className="tn-icon-button"
+            aria-label="Agregar al carrito"
+            title="Agregar al carrito"
+          >
+            <i className="fa fa-shopping-cart"></i>
+          </button>
+        </div>
       </div>
 
       <div className="card-content">

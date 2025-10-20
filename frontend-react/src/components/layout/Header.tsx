@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLikes } from '../../contexts/LikeContext';
+import { useCart } from '../../contexts/CartContext';
 
 const Header = () => {
   const { user, logout } = useAuth();
+  const { count: likesCount } = useLikes();
+  const { items: cartItems } = useCart();
   const navigate = useNavigate();
   const [isSticky, setIsSticky] = useState(false);
-  const [cartItemCount] = useState(0); // Ejemplo, esto debería venir de un estado global
+  
+  const cartItemCount = cartItems.reduce((total, item) => total + item.cantidad, 0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -77,14 +82,19 @@ const Header = () => {
                 <i className="fa fa-search"></i>
               </Link>
               {/* Favoritos */}
-              <Link to="/favoritos" className="btn btn-icon me-2">
+              <Link to="/likes" className="btn btn-icon me-2 position-relative" aria-label="Favoritos">
                 <i className="fa fa-heart"></i>
+                {likesCount > 0 && (
+                  <span className="tn-badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle">
+                    {likesCount}
+                  </span>
+                )}
               </Link>
               {/* Carrito */}
-              <Link to="/carrito" className="btn btn-icon me-3 position-relative">
+              <Link to="/cart" className="btn btn-icon me-3 position-relative" aria-label="Carrito de compras">
                 <i className="fa fa-shopping-cart"></i>
                 {cartItemCount > 0 && (
-                  <span className="badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle">
+                  <span className="tn-badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle">
                     {cartItemCount}
                   </span>
                 )}

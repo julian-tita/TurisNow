@@ -356,6 +356,7 @@ body {
 /* IMPORTANTE: NO forzar transparencia aquí */
 nav.navbar {
   /* Se eliminan reglas que fuerzan transparencia */
+  position: relative;
 }
 
 /* NAV por defecto (arriba del todo) — CON TU GRADIENTE ESPECÍFICO */
@@ -2334,4 +2335,287 @@ nav.navbar.scrolled .navbar-toggler .fa-bars {
   .stats-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* ============================================
+   TURISNOW CART & LIKES UTILITIES
+   ============================================ */
+
+/* Badge for counts */
+.tn-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0.2em 0.4em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 50%;
+}
+
+/* Icon button styling */
+.tn-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tn-icon-button:hover {
+  background: white;
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tn-icon-button.liked {
+  background: #dc3545;
+  color: white;
+}
+
+.tn-icon-button.liked:hover {
+  background: #c82333;
+  color: white;
+}
+
+/* Card actions overlay */
+.tn-card-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.experiencia-card:hover .tn-card-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Cart grid layout */
+.tn-cart-grid {
+  margin-bottom: 2rem;
+}
+
+/* Cart summary styling */
+.tn-cart-summary {
+  position: sticky;
+  top: 100px;
+}
+
+.tn-cart-summary .card {
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+.tn-cart-summary .card-header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  border-radius: 12px 12px 0 0 !important;
+  border: none;
+}
+
+/* Empty state styling */
+.tn-empty {
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tn-cart-summary {
+    position: static;
+    margin-top: 2rem;
+  }
+  
+  .tn-card-actions {
+    opacity: 1;
+    transform: translateY(0);
+    top: 8px;
+    right: 8px;
+  }
+  
+  .tn-icon-button {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+}
+
+/* Accessibility improvements */
+.tn-icon-button:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   TURISNOW CART & LIKES UTILITIES
+   ============================================ */
+
+/* Badge for counts */
+.tn-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0.2em 0.4em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 50%;
+}
+
+/* Icon button styling */
+.tn-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tn-icon-button:hover {
+  background: white;
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tn-icon-button.liked {
+  background: #dc3545;
+  color: white;
+}
+
+.tn-icon-button.liked:hover {
+  background: #c82333;
+  color: white;
+}
+
+/* Card actions overlay */
+.tn-card-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.experiencia-card:hover .tn-card-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Cart grid layout */
+.tn-cart-grid {
+  margin-bottom: 2rem;
+}
+
+/* Cart summary styling */
+.tn-cart-summary {
+  position: sticky;
+  top: 100px;
+}
+
+.tn-cart-summary .card {
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+.tn-cart-summary .card-header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  border-radius: 12px 12px 0 0 !important;
+  border: none;
+}
+
+/* Empty state styling */
+.tn-empty {
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tn-cart-summary {
+    position: static;
+    margin-top: 2rem;
+  }
+  
+  .tn-card-actions {
+    opacity: 1;
+    transform: translateY(0);
+    top: 8px;
+    right: 8px;
+  }
+  
+  .tn-icon-button {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+}
+
+/* Accessibility improvements */
+.tn-icon-button:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.tn-badge[aria-label]:hover::after {
+  content: attr(aria-label);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
 }
