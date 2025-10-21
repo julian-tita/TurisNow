@@ -28,30 +28,20 @@ body {
   font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, hsl(0, 0%, 100%) 0%, #FFFFFF 100%);
   min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* Quitar el padding-top del body */
-body {
-  font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, hsl(0, 0%, 100%) 0%, #FFFFFF 100%);
-  min-height: 100vh;
-  overflow-x: hidden;
-  /* padding-top: 90px; <- QUITADO */
+  overflow-x: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 #root {
   min-height: 100vh;
-  display: flex;  /* ...existing code... */
-  
-  /* Padding para el navbar fixed */
-  body {
-    font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, hsl(0, 0%, 100%) 0%, #FFFFFF 100%);
-    min-height: 100vh;
-    overflow-x: hidden;
-    padding-top: 90px; /* Espacio para el navbar fixed + topbar */
-  }
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
   
   /* Ajustar el auth-container también */
   .auth-container {
@@ -76,7 +66,42 @@ body {
 }
 
 /* ==================================================
-   UTILIDADES GLOBALES
+   UTILIDADES GLOBALES Y FIXES RESPONSIVOS
+   ================================================== */
+
+/* Prevenir desbordamiento horizontal en toda la aplicación */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+.container-fluid, .container, .container-sm, .container-md, .container-lg, .container-xl, .container-xxl {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.row {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.row > * {
+  padding-left: var(--bs-gutter-x, 0.75rem);
+  padding-right: var(--bs-gutter-x, 0.75rem);
+}
+
+/* Asegurar que las imágenes no se desborden */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ==================================================
+   UTILIDADES GLOBALES ORIGINALES
    ================================================== */
 .container {
   max-width: 1200px;
@@ -357,13 +382,42 @@ body {
 nav.navbar {
   /* Se eliminan reglas que fuerzan transparencia */
   position: relative;
+  z-index: 1050; /* Bootstrap navbar standard z-index */
+  min-height: 80px; /* Asegurar que siempre tenga altura */
+}
+
+/* Container del navbar siempre visible */
+.container-fluid.position-relative {
+  z-index: 1050;
+  position: relative;
+}
+
+/* Container cuando navbar está atTop debe ser absoluto para flotar sobre contenido */
+.container-fluid.navbar-at-top {
+  position: absolute !important;
+  top: 0;
+  width: 100%;
+  z-index: 1050;
+  left: 0;
+}
+
+/* Container cuando navbar está sticky mantiene comportamiento normal */
+.container-fluid.navbar-sticky {
+  position: relative;
 }
 
 /* NAV por defecto (arriba del todo) — CON TU GRADIENTE ESPECÍFICO */
 nav.navbar.atTop {
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 19%, rgba(74, 144, 226, 0.35) 55%, rgba(255, 255, 255, 0) 100%) !important;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.85) 0%, rgba(74, 144, 226, 0.7) 50%, rgba(74, 144, 226, 0.5) 100%) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   transition: all .3s ease;
   border: none;
+  z-index: 1060 !important; /* above content */
+  position: fixed !important; /* fixed at top to avoid being under App */
+  top: 0; left: 0; right: 0;
+  width: 100%;
+  min-height: 80px; /* ensure height */
 }
 
 /* NAV al hacer scroll — fondo blanco sólido */
@@ -371,6 +425,12 @@ nav.navbar.scrolled {
   background: #ffffff !important;
   box-shadow: 0 2px 20px rgba(0,0,0,.12);
   transition: all .3s ease;
+  z-index: 1050;
+}
+
+/* Sticky navbar debe tener mayor prioridad */
+nav.navbar.sticky-top {
+  z-index: 1060 !important;
 }
 
 /* Estilos para los elementos del navbar cuando está arriba */
@@ -412,6 +472,23 @@ nav.navbar.atTop .btn-primary:hover {
   border-color: rgba(255, 255, 255, 0.9) !important;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
   transform: translateY(-2px);
+}
+
+/* Iconos cuando navbar está atTop */
+nav.navbar.atTop .btn-icon i,
+nav.navbar.atTop .fa-heart,
+nav.navbar.atTop .fa-shopping-cart,
+nav.navbar.atTop .fa-search {
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Avatar cuando está atTop */
+nav.navbar.atTop .user-avatar {
+  background: rgba(255, 255, 255, 0.3) !important;
+  border: 2px solid rgba(255, 255, 255, 0.5) !important;
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 /* Estilos para los elementos del navbar cuando hace scroll */
@@ -611,6 +688,10 @@ nav.navbar.scrolled .navbar-toggler .fa-bars {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip; /* avoid creating unwanted scroll while not clipping dropdown vertically */
+  box-sizing: border-box;
 }
 
 .auth-container {
@@ -618,7 +699,7 @@ nav.navbar.scrolled .navbar-toggler .fa-bars {
   z-index: 100;
   background: #ffffff;
   min-height: 100vh;
-  padding-top: 120px; /* Espacio para el navbar */
+  padding-top: 90px; /* Reducido para mejor adaptación */
   padding-bottom: 2rem;
 }
 
@@ -2618,4 +2699,38 @@ nav.navbar.scrolled .navbar-toggler .fa-bars {
   font-size: 12px;
   white-space: nowrap;
   z-index: 1000;
+}
+
+/* Simple dropdown avatar button */
+.btn-icon-avatar {
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-icon-avatar:focus {
+  outline: none;
+}
+
+.btn-icon-avatar::after {
+  display: none !important; /* Remove Bootstrap dropdown arrow */
+}
+
+/* Ensure page content stays below navbar */
+main,
+.main-content,
+header.position-relative,
+section,
+.hero-section {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dropdown menu proper z-index */
+.dropdown-menu {
+  z-index: 2000 !important; /* above fixed navbar (1060) and app content */
 }

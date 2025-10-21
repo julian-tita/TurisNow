@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Category } from '../types/experience';
+import type { Category } from '../types/experiencia.types';
 
 const Explorar: React.FC = () => {
   const categories: { 
@@ -11,35 +11,35 @@ const Explorar: React.FC = () => {
     color: string;
   }[] = [
     {
-      key: 'playa',
+      key: 'PLAYA',
       name: 'Playa',
       description: 'Relájate en las mejores costas y disfruta del sol',
       icon: 'fas fa-umbrella-beach',
       color: 'bg-info'
     },
     {
-      key: 'montaña',
+      key: 'MONTANA',
       name: 'Montaña',
       description: 'Aventuras en las cimas más espectaculares',
       icon: 'fas fa-mountain',
       color: 'bg-success'
     },
     {
-      key: 'aventura',
+      key: 'AVENTURA',
       name: 'Aventura',
       description: 'Experiencias llenas de adrenalina y emoción',
       icon: 'fas fa-hiking',
       color: 'bg-danger'
     },
     {
-      key: 'gastronomía',
+      key: 'GASTRONOMIA',
       name: 'Gastronomía',
       description: 'Descubre sabores únicos y tradiciones culinarias',
       icon: 'fas fa-utensils',
       color: 'bg-warning'
     },
     {
-      key: 'cultura',
+      key: 'CULTURA',
       name: 'Cultura',
       description: 'Sumérgete en la historia y las tradiciones locales',
       icon: 'fas fa-landmark',

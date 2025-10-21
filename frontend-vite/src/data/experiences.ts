@@ -1,4 +1,4 @@
-import { Experience, Departure } from '../types/experience';
+import type { ExperienciaListadoDTO, SalidaDTO, UbicacionDTO, Categoria, Moneda } from '../types/experiencia.types';
 
 // Función para generar fechas futuras
 const generateFutureDates = (count: number = 3): string[] => {
@@ -121,14 +121,14 @@ const POOLS = {
 } as const;
 
 // Generador de experiencias por categoría
-const makeExperiences = (category: keyof typeof POOLS, count = 10): Experience[] => {
+const makeExperiences = (category: keyof typeof POOLS, count = 10): ExperienciaListadoDTO[] => {
   const pool = POOLS[category];
-  const out: Experience[] = [];
+  const out: ExperienciaListadoDTO[] = [];
   for (let i = 0; i < count; i++) {
     const place = pool.places[i % pool.places.length];
     const img = pool.images[i % pool.images.length];
     const dates = generateFutureDates(2 + (i % 2)); // 2 o 3 salidas
-    const currency = i % 3 === 0 ? 'USD' : 'ARS';
+    const currency: Moneda = i % 3 === 0 ? 'USD' : 'ARS';
     const base = category === 'gastronomía' ? 22000 : category === 'playa' ? 12000 : 14000;
     const usdBase = category === 'montaña' || category === 'aventura' ? 140 : 95;
 
@@ -139,25 +139,39 @@ const makeExperiences = (category: keyof typeof POOLS, count = 10): Experience[]
     const deps = dates.map((d, idx) => {
       const total = 8 + ((i + idx) % 18);             // 8..25
       const left  = Math.max(0, (total - ((i * 3 + idx * 2) % total))); // variedad
-      const dep: Departure = {
-        id: `dep-${category}-${i + 1}-${idx + 1}`,
-        startAt: d,
-        endAt: new Date(new Date(d).getTime() + (6 + (i % 4)) * 3600_000).toISOString(),
-        capacityTotal: total,
-        capacityLeft: left
+      const dep: SalidaDTO = {
+        id: i * 10 + idx + 1,
+        fechaInicio: d,
+        fechaFin: new Date(new Date(d).getTime() + (6 + (i % 4)) * 3600_000).toISOString(),
+        capacidadTotal: total,
+        capacidadDisponible: left
       };
       return dep;
     });
 
+    // Mapear la categoría al formato del backend
+    const categoriaBackend: Categoria = 
+      category === 'playa' ? 'PLAYA' :
+      category === 'montaña' ? 'MONTANA' :
+      category === 'aventura' ? 'AVENTURA' :
+      category === 'gastronomía' ? 'GASTRONOMIA' :
+      'CULTURA';
+
+    const ubicacion: UbicacionDTO = {
+      ciudad: place.city,
+      region: place.region,
+      pais: place.country
+    };
+
     out.push({
-      id: `exp-${category}-${String(i + 1).padStart(3, '0')}`,
-      title:
+      id: i + 1 + (Object.keys(POOLS).indexOf(category) * 100), // ID numérico único
+      titulo:
         category === 'playa' ? `Día de playa en ${place.city}` :
         category === 'montaña' ? `Senderismo en ${place.city}` :
         category === 'aventura' ? `Aventura en ${place.city}` :
         category === 'gastronomía' ? `Tour gastronómico en ${place.city}` :
         `City tour cultural en ${place.city}`,
-      description:
+      descripcion:
         category === 'playa'
           ? 'Sombrilla, reposeras y actividades acuáticas para un día de relax junto al mar.'
           : category === 'montaña'
@@ -167,20 +181,20 @@ const makeExperiences = (category: keyof typeof POOLS, count = 10): Experience[]
           : category === 'gastronomía'
           ? 'Degustaciones, maridajes y secretos culinarios locales en un recorrido sabroso.'
           : 'Recorrido por hitos históricos, museos y arquitectura destacada.',
-      price,
-      currency,
-      location: place,
-      category: category as any,
-      mainImageUrl: img,
+      precio: price,
+      moneda: currency,
+      ubicacion: ubicacion,
+      categoria: categoriaBackend,
+      imagenUrl: img,
       tags: pool.tags.slice(0, 3),
-      departures: deps
+      proximasSalidas: deps.length
     });
   }
   return out;
 };
 
 // 👉 Reemplazo del array completo:
-export const mockExperiences: Experience[] = [
+export const mockExperiences: ExperienciaListadoDTO[] = [
   ...makeExperiences('playa', 10),
   ...makeExperiences('montaña', 10),
   ...makeExperiences('aventura', 10),
@@ -189,7 +203,7 @@ export const mockExperiences: Experience[] = [
 ];
 
 // Función helper para obtener experiencias con delay simulado
-export const getExperiences = async (delay: number = 400): Promise<Experience[]> => {
+export const getExperiences = async (delay: number = 400): Promise<ExperienciaListadoDTO[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(mockExperiences);
@@ -198,7 +212,7 @@ export const getExperiences = async (delay: number = 400): Promise<Experience[]>
 };
 
 // Función para obtener una experiencia por ID
-export const getExperienceById = async (id: string, delay: number = 300): Promise<Experience | null> => {
+export const getExperienceById = async (id: number, delay: number = 300): Promise<ExperienciaListadoDTO | null> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       const experience = mockExperiences.find(exp => exp.id === id);

@@ -1,7 +1,8 @@
 // Types based on backend DTOs and Models
 export type Moneda = 'ARS' | 'USD';
 
-export type Categoria = 'PLAYA' | 'MONTANA' | 'AVENTURA' | 'GASTRONOMIA' | 'CULTURA';
+export const CATEGORIAS = ['PLAYA', 'MONTANA', 'AVENTURA', 'GASTRONOMIA', 'CULTURA'] as const;
+export type Categoria = typeof CATEGORIAS[number];
 
 export interface UbicacionDTO {
   ciudad: string;
@@ -97,3 +98,8 @@ export interface ExperienciaRequest {
 
 // Response types
 export type ExperienciasResponse = PageResponse<ExperienciaListadoDTO>;
+
+// Aliases para compatibilidad con código existente
+export type Experience = ExperienciaListadoDTO;
+export type Departure = SalidaDTO;
+export type Category = Categoria;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Categoria } from '../../types/experiencia.types';
+import type { Categoria } from '../../types/experiencia.types';
 
 interface ExperienciaFiltersProps {
   filtroCategoria: Categoria | '';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ExperienciaListadoDTO } from '../../types/experiencia.types';
+import type { ExperienciaListadoDTO } from '../../types/experiencia.types';
 import { useLikes } from '../../contexts/LikeContext';
 import { useCart } from '../../contexts/CartContext';
 

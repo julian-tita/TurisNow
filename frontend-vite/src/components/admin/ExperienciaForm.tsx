@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { experienciaService } from '../../services/experienciaService';
-import { 
+import type { 
   ExperienciaRequest, 
   ExperienciaDetalleDTO, 
   Categoria, 

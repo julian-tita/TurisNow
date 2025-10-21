@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Experience, Departure } from '../../types/experience';
+import type { Experience, Departure } from '../../types/experiencia.types';
 
 interface Item {
 	departure: Departure;
@@ -30,21 +30,28 @@ export default function UpcomingDepartures({ items, loading, title = 'Próximas 
 			<div className="row g-4">
 				{loading && Array.from({length:6}).map((_,i)=>(<div className="col-12 col-md-6 col-lg-4" key={i}><Skeleton/></div>))}
 				{!loading && items.map(item => {
-					const date = new Date(item.departure.startAt).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
-					const few = item.departure.capacityLeft <= 3;
+					// Defensive access: use Spanish fields from DTO
+					const dep = item.departure as Partial<Departure>;
+					const exp = item.experience as Partial<Experience>;
+					const dateStr = dep?.fechaInicio || null;
+					const date = dateStr ? new Date(dateStr).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+					const capacityLeft = typeof dep?.capacidadDisponible === 'number' ? dep.capacidadDisponible : 0;
+					const capacityTotal = typeof dep?.capacidadTotal === 'number' ? dep.capacidadTotal : 0;
+					const few = capacityLeft <= 3;
+					const keyId = dep?.id ?? `${exp?.id || 'x'}-${Math.random()}`;
 					return (
-						<div className="col-12 col-md-6 col-lg-4" key={item.departure.id}>
+						<div className="col-12 col-md-6 col-lg-4" key={String(keyId)}>
 							<div className="border rounded p-3 h-100 d-flex flex-column">
 								<div className="d-flex align-items-start justify-content-between mb-2">
 									<div>
-										<h6 className="mb-1 text-truncate" title={item.experience.title}>{item.experience.title}</h6>
+										<h6 className="mb-1 text-truncate" title={exp?.titulo || ''}>{exp?.titulo || 'Experiencia'}</h6>
 										<small className="text-muted">{date}</small>
 									</div>
 									{few && <span className="badge bg-danger">Pocos lugares</span>}
 								</div>
 								<div className="mt-auto d-flex justify-content-between align-items-center">
-									<span className="small text-muted">Cupos: {item.departure.capacityLeft}/{item.departure.capacityTotal}</span>
-									<Link to={`/experiencias/${item.experience.id}`} className="btn btn-sm btn-primary">Ver</Link>
+									<span className="small text-muted">Cupos: {capacityLeft}/{capacityTotal}</span>
+									<Link to={`/experiencias/${exp?.id ?? ''}`} className="btn btn-sm btn-primary">Ver</Link>
 								</div>
 							</div>
 						</div>

@@ -4,7 +4,7 @@ import CategoryStrip from "../components/landing/CategoryStrip";
 import HowItWorks from "../components/landing/HowItWorks";
 import TrustBenefits from "../components/landing/TrustBenefits";
 import { getExperiences } from "../data/experiences";
-import { Experience, Departure } from "../types/experience";
+import type { Experience, Departure } from "../types/experiencia.types";
 import { Link } from 'react-router-dom';
 
 // Helpers locales
@@ -16,10 +16,17 @@ const formatPrice = (amount: number, currency: string) => {
   }
 };
 
-const pickFeatured = (exps: Experience[], n = 6): Experience[] => {
+const pickCheapest = (exps: Experience[], n = 8): Experience[] => {
   if (!exps.length) return [];
   // Ordenar por precio ascendente y tomar primeros n (podría hacerse aleatorio)
-  return [...exps].sort((a, b) => a.price - b.price).slice(0, n);
+  return [...exps].sort((a, b) => a.precio - b.precio).slice(0, n);
+};
+
+const pickFeatured = (exps: Experience[], n = 4): Experience[] => {
+  if (!exps.length) return [];
+  // Por ahora, tomamos las primeras n experiencias
+  // En una implementación real, esto vendría marcado desde el backend
+  return exps.slice(0, n);
 };
 
 interface UpcomingItem {
@@ -28,19 +35,10 @@ interface UpcomingItem {
 }
 
 const pickUpcomingDepartures = (exps: Experience[], n = 6): UpcomingItem[] => {
-  const now = new Date();
-  const list: UpcomingItem[] = [];
-  exps.forEach(exp => {
-    exp.departures.forEach(dep => {
-      const start = new Date(dep.startAt);
-      if (start > now && dep.capacityLeft > 0) {
-        list.push({ departure: dep, experience: exp });
-      }
-    });
-  });
-  return list
-    .sort((a, b) => new Date(a.departure.startAt).getTime() - new Date(b.departure.startAt).getTime())
-    .slice(0, n);
+  // Nota: ExperienciaListadoDTO no incluye salidas detalladas, solo proximasSalidas
+  // En una implementación real, necesitaríamos hacer una llamada separada al API
+  // para obtener las salidas próximas o usar ExperienciaDetalleDTO
+  return [];
 };
 
 // Componente Newsletter mantenido aquí por simplicidad
@@ -96,15 +94,15 @@ export default function Home() {
         </div>
         <div className="row g-4">
           {loading && Array.from({length:4}).map((_,i)=>(<div className="col-6 col-md-4 col-lg-3" key={i}><SkeletonCard/></div>))}
-          {!loading && featured.map(exp => (
+          {!loading && featured.map((exp: Experience) => (
             <div className="col-6 col-md-4 col-lg-3" key={exp.id}>
               <div className="card h-100 shadow-sm border-0">
-                <div className="ratio ratio-4x3 bg-light" style={{backgroundImage:`url(${exp.mainImageUrl})`, backgroundSize:'cover', backgroundPosition:'center'}}></div>
+                <div className="ratio ratio-4x3 bg-light" style={{backgroundImage:`url(${exp.imagenUrl})`, backgroundSize:'cover', backgroundPosition:'center'}}></div>
                 <div className="card-body d-flex flex-column">
-                  <h6 className="card-title mb-1 text-truncate" title={exp.title}>{exp.title}</h6>
-                  <small className="text-muted d-block mb-2">{exp.location.city}</small>
+                  <h6 className="card-title mb-1 text-truncate" title={exp.titulo}>{exp.titulo}</h6>
+                  <small className="text-muted d-block mb-2">{exp.ubicacion.ciudad}</small>
                   <div className="mt-auto d-flex justify-content-between align-items-center">
-                    <span className="fw-semibold text-primary small">{formatPrice(exp.price, exp.currency)}</span>
+                    <span className="fw-semibold text-primary small">{formatPrice(exp.precio, exp.moneda)}</span>
                     <Link to={`/experiencias/${exp.id}`} className="btn btn-sm btn-outline-primary">Ver</Link>
                   </div>
                 </div>
@@ -120,27 +118,7 @@ export default function Home() {
         </div>
         <div className="row g-4">
           {loading && Array.from({length:6}).map((_,i)=>(<div className="col-12 col-md-6 col-lg-4" key={i}><SkeletonCard/></div>))}
-          {!loading && upcoming.map(item => {
-            const date = new Date(item.departure.startAt).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
-            const few = item.departure.capacityLeft <= 3;
-            return (
-              <div className="col-12 col-md-6 col-lg-4" key={item.departure.id}>
-                <div className="border rounded p-3 h-100 d-flex flex-column">
-                  <div className="d-flex align-items-start justify-content-between mb-2">
-                    <div>
-                      <h6 className="mb-1 text-truncate" title={item.experience.title}>{item.experience.title}</h6>
-                      <small className="text-muted">{date}</small>
-                    </div>
-                    {few && <span className="badge bg-danger">Pocos lugares</span>}
-                  </div>
-                  <div className="mt-auto d-flex justify-content-between align-items-center">
-                    <span className="small text-muted">Cupos: {item.departure.capacityLeft}/{item.departure.capacityTotal}</span>
-                    <Link to={`/experiencias/${item.experience.id}`} className="btn btn-sm btn-primary">Ver</Link>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {/* Próximas salidas se mostrarán cuando se integre completamente con el backend */}
           {!loading && upcoming.length === 0 && <p className="text-muted small">No hay salidas próximas con cupos.</p>}
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { experienciaService } from '../../services/experienciaService';
-import { ExperienciaDetalleDTO, SalidaDTO } from '../../types/experiencia.types';
+import experienciaService from '../../services/experienciaService';
+import type { ExperienciaDetalleDTO, SalidaDTO } from '../../types/experiencia.types';
 
 interface SalidasManagementProps {
   experienciaId: number;

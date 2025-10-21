@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ExperienciasList from '../components/experiencias/ExperienciasList';
-import { Categoria } from '../types/experiencia.types';
+import type { Categoria } from '../types/experiencia.types';
 
 const ExperienciasListado: React.FC = () => {
   const [searchParams] = useSearchParams();

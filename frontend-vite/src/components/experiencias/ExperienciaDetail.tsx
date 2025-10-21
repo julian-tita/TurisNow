@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import experienciaService from '../../services/experienciaService';
-import { ExperienciaDetalleDTO } from '../../types/experiencia.types';
+import type { ExperienciaDetalleDTO } from '../../types/experiencia.types';
 
 const ExperienciaDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();

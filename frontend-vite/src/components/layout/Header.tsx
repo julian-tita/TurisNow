@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLikes } from '../../contexts/LikeContext';
@@ -15,7 +15,7 @@ const Header = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsSticky(window.scrollY > 50);
+      setIsSticky(window.scrollY > 100); // Aumentado de 50 a 100 para mejor detección
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -37,8 +37,8 @@ const Header = () => {
   };
 
   return (
-    <div className="container-fluid position-relative p-0">
-      <nav className={`navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0 ${isSticky ? 'sticky-top' : ''}`}>
+    <div className={`container-fluid position-relative p-0 ${!isSticky ? 'navbar-at-top' : 'navbar-sticky'}`}>
+      <nav className={`navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0 ${isSticky ? 'sticky-top scrolled' : 'atTop'}`}>
         {/* Marca (Logo) */}
         <Link to="/" className="navbar-brand p-0">
           <h1 className="text-primary m-0">
@@ -108,12 +108,13 @@ const Header = () => {
                     type="button"
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
+                    id="userDropdown"
                   >
                     <div className="user-avatar">
                       {getInitials(user.nombreCompleto)}
                     </div>
                   </button>
-                  <ul className="dropdown-menu dropdown-menu-end">
+                  <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                     <li><Link to="/dashboard" className="dropdown-item">Mi Perfil</Link></li>
                     <li><Link to="/mis-reservas" className="dropdown-item">Mis Reservas</Link></li>
                     <li><hr className="dropdown-divider" /></li>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Experience } from '../../types/experience';
+import type { Experience } from '../../types/experiencia.types';
 
 interface Props {
 	items: Experience[];
@@ -32,12 +32,12 @@ export default function FeaturedGrid({ items, loading, title = 'Destacadas'}: Pr
 				{!loading && items.map(exp => (
 					<div className="col-6 col-md-4 col-lg-3" key={exp.id}>
 						<div className="card h-100 shadow-sm border-0">
-							<div className="ratio ratio-4x3 bg-light" style={{backgroundImage:`url(${exp.mainImageUrl})`, backgroundSize:'cover', backgroundPosition:'center'}}></div>
+							<div className="ratio ratio-4x3 bg-light" style={{backgroundImage:`url(${exp.imagenUrl || '/assets/img/placeholder-experiencia.jpg'})`, backgroundSize:'cover', backgroundPosition:'center'}}></div>
 							<div className="card-body d-flex flex-column">
-								<h6 className="card-title mb-1 text-truncate" title={exp.title}>{exp.title}</h6>
-								<small className="text-muted d-block mb-2">{exp.location.city}</small>
+								<h6 className="card-title mb-1 text-truncate" title={exp.titulo || ''}>{exp.titulo || exp.id}</h6>
+								<small className="text-muted d-block mb-2">{exp.ubicacion?.ciudad || ''}</small>
 								<div className="mt-auto d-flex justify-content-between align-items-center">
-									<span className="fw-semibold text-primary small">{formatPrice(exp.price, exp.currency)}</span>
+									<span className="fw-semibold text-primary small">{formatPrice(exp.precio ?? 0, exp.moneda || 'ARS')}</span>
 									<Link to={`/experiencias/${exp.id}`} className="btn btn-sm btn-outline-primary">Ver</Link>
 								</div>
 							</div>

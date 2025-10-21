@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import experienciaService from '../../services/experienciaService';
-import { ExperienciaListadoDTO, ExperienciasResponse, Categoria } from '../../types/experiencia.types';
+import type { ExperienciaListadoDTO, ExperienciasResponse, Categoria } from '../../types/experiencia.types';
 
 interface ExperienciasListProps {
   showFilters?: boolean;
