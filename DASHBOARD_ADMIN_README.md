@@ -7,7 +7,7 @@ Se ha implementado un Dashboard Administrativo completo para usuarios con rol de
 ## 📁 Estructura de Archivos Creados
 
 ```
-frontend-react/src/
+frontend-vite/src/                          # ⚡ Proyecto migrado a Vite
 ├── components/
 │   ├── AdminRoute.tsx                    # Ruta protegida para admins
 │   ├── Login.tsx                         # Modificado: Redirige según rol
@@ -98,8 +98,8 @@ mvn spring-boot:run
 ### 3. Iniciar el Frontend
 
 ```bash
-cd frontend-react
-npm start
+cd frontend-vite
+npm run dev
 ```
 
 ### 4. Probar el Login

@@ -41,9 +41,8 @@ yarn-error.log*
 .npm
 .eslintcache
 
-# Frontend React build
-frontend-react/build/
-frontend-react/dist/
+# Frontend Vite build
+frontend-vite/dist/
 
 # Environment variables
 .env

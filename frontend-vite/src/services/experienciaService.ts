@@ -1,5 +1,6 @@
-import axios, { AxiosResponse } from 'axios';
-import {
+import axios from 'axios';
+import type { AxiosResponse } from 'axios';
+import type {
   ExperienciaListadoDTO,
   ExperienciaDetalleDTO,
   ExperienciasResponse,
@@ -9,7 +10,7 @@ import {
 } from '../types/experiencia.types';
 
 // Base URL del backend
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:9090';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090';
 const EXPERIENCIAS_ENDPOINT = `${API_BASE_URL}/api/experiencias`;
 
 // Helper para headers con autenticación

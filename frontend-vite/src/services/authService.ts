@@ -1,5 +1,5 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL 
-  ? `${process.env.REACT_APP_API_URL}/api/auth` 
+const API_BASE_URL = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL}/api/auth` 
   : 'http://localhost:9090/api/auth';
 
 export interface LoginRequest {
