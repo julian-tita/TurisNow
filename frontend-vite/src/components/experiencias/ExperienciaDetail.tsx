@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import experienciaService from '../../services/experienciaService';
 import type { ExperienciaDetalleDTO } from '../../types/experiencia.types';
+import { useCart } from '../../contexts/CartContext';
+import { useLikes } from '../../contexts/LikeContext';
 
 const ExperienciaDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -10,6 +12,50 @@ const ExperienciaDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSalida, setSelectedSalida] = useState<number | null>(null);
+  
+  // Cart and Likes functionality
+  const { add } = useCart();
+  const { has, toggle } = useLikes();
+
+  // Handler functions
+  const handleAddToCart = () => {
+    if (!experiencia) return;
+    
+    if (!selectedSalida) {
+      alert('Por favor selecciona una fecha para continuar');
+      return;
+    }
+    
+    const selectedSalidaData = experiencia.salidas.find(s => s.id === selectedSalida);
+    
+    const cartItem = {
+      id: experiencia.id,
+      titulo: experiencia.titulo,
+      precio: experiencia.precio,
+      imagenUrl: experiencia.imagenUrl,
+      cantidad: 1,
+      fechaSalida: selectedSalidaData?.fechaInicio
+    };
+    
+    add(cartItem);
+    alert('Experiencia añadida al carrito');
+  };
+
+  const handleToggleFavorite = () => {
+    if (!experiencia) return;
+    
+    const likeItem = {
+      id: experiencia.id,
+      titulo: experiencia.titulo,
+      precio: experiencia.precio,
+      imagenUrl: experiencia.imagenUrl,
+      categoria: experiencia.categoria
+    };
+    
+    toggle(likeItem);
+  };
+
+  const isLiked = experiencia ? has(experiencia.id) : false;
 
   useEffect(() => {
     if (id) {
@@ -330,6 +376,24 @@ const ExperienciaDetail: React.FC = () => {
                     >
                       {selectedSalida ? '🎫 Reservar Ahora' : '📅 Selecciona una fecha'}
                     </button>
+                    
+                    {/* Cart and Favorite buttons */}
+                    <div className="booking-secondary-actions">
+                      <button 
+                        className="btn-cart"
+                        onClick={handleAddToCart}
+                        disabled={!selectedSalida}
+                      >
+                        🛒 Agregar al Carrito
+                      </button>
+                      
+                      <button 
+                        className={`btn-favorite ${isLiked ? 'liked' : ''}`}
+                        onClick={handleToggleFavorite}
+                      >
+                        {isLiked ? '❤️' : '🤍'} Favorito
+                      </button>
+                    </div>
                     
                     <div className="contact-info">
                       <p>¿Tienes preguntas?</p>
