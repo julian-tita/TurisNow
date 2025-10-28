@@ -2,7 +2,7 @@ import React from 'react';
 
 const About: React.FC = () => {
   return (
-    <div>
+    <div style={{ paddingTop: '120px' }}>
       {/* Hero Header */}
       <div className="container-fluid bg-primary py-5 mb-5 hero-header">
         <div className="container py-5">

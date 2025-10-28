@@ -39,7 +39,7 @@ const LikePage: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid py-5">
+    <div className="container-fluid py-5" style={{ paddingTop: '120px' }}>
       <div className="container">
         <div className="row">
           <div className="col-12">

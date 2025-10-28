@@ -8,7 +8,7 @@ const ExperienciasListado: React.FC = () => {
   const categoria = searchParams.get('categoria') as Categoria | null;
 
   return (
-    <div className="experiencias-listado-page">
+    <div className="experiencias-listado-page" style={{ paddingTop: '120px' }}>
       {/* Hero Section */}
       <div className="experiencias-hero">
         <div className="hero-content">

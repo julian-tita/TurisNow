@@ -128,7 +128,7 @@ const MisReservas: React.FC = () => {
   }
 
   return (
-    <div className="container py-4">
+    <div className="container py-4" style={{ paddingTop: '120px' }}>
       {/* Header */}
       <div className="row mb-4">
         <div className="col-12">
