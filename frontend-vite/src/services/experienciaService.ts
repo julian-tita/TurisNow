@@ -10,7 +10,8 @@ import type {
 } from '../types/experiencia.types';
 
 // Base URL del backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090';
+// Usar proxy de Vite en desarrollo (/api se redirige a http://localhost:9090/api)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 const EXPERIENCIAS_ENDPOINT = `${API_BASE_URL}/api/experiencias`;
 
 // Helper para headers con autenticación

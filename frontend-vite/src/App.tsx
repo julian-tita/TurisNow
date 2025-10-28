@@ -19,6 +19,8 @@ import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import DashboardAdmin from './components/admin/DashboardAdmin';
+import ReservarExperiencia from './pages/ReservarExperiencia';
+import MisReservas from './pages/MisReservas';
 
 import './assets/css/style.css';
 
@@ -45,6 +47,24 @@ function App() {
               <Route path="/explorar" element={<Explorar />} />
               <Route path="/experiencias" element={<ExperienciasListado />} />
               <Route path="/experiencias/:id" element={<ExperienciaDetalle />} />
+
+              {/* Reservations - Protected Routes */}
+              <Route
+                path="/reservar/:experienciaId/:salidaId"
+                element={
+                  <ProtectedRoute>
+                    <ReservarExperiencia />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/mis-reservas"
+                element={
+                  <ProtectedRoute>
+                    <MisReservas />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Likes and Cart */}
               <Route path="/likes" element={<LikePage />} />

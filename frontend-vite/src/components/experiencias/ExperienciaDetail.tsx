@@ -161,8 +161,8 @@ const ExperienciaDetail: React.FC = () => {
       return;
     }
     
-    // TODO: Implementar lógica de reserva
-    alert('¡Funcionalidad de reserva próximamente! 🚀');
+    // Navegar a la página de reserva con el ID de la experiencia y la salida seleccionada
+    navigate(`/reservar/${id}/${selectedSalida}`);
   };
 
   if (loading) {

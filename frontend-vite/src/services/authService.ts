@@ -1,6 +1,7 @@
+// Usar proxy de Vite en desarrollo (/api se redirige a http://localhost:9090/api)
 const API_BASE_URL = import.meta.env.VITE_API_URL 
   ? `${import.meta.env.VITE_API_URL}/api/auth` 
-  : 'http://localhost:9090/api/auth';
+  : '/api/auth';
 
 export interface LoginRequest {
   email: string;
