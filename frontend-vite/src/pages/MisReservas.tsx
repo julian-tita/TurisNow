@@ -1,15 +1,18 @@
 // TurisNow: User Reservations Management Page
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import reservaService from '../services/reservaService';
 import type { ReservaDetalleDTO } from '../services/reservaService';
+import ReservaDetailModal from '../components/reservas/ReservaDetailModal';
+import SkeletonCard from '../components/common/SkeletonCard';
 
 const MisReservas: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Estados
   const [reservas, setReservas] = useState<ReservaDetalleDTO[]>([]);
@@ -18,8 +21,19 @@ const MisReservas: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [filtroEstado, setFiltroEstado] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  // Modal de detalle
+  const [reservaSeleccionada, setReservaSeleccionada] = useState<ReservaDetalleDTO | null>(null);
+  
+  // Filtros avanzados
+  const [filtroEstado, setFiltroEstado] = useState<string>(searchParams.get('estado') || '');
+  const [busquedaTitulo, setBusquedaTitulo] = useState<string>(searchParams.get('titulo') || '');
+  const [fechaDesde, setFechaDesde] = useState<string>(searchParams.get('desde') || '');
+  const [fechaHasta, setFechaHasta] = useState<string>(searchParams.get('hasta') || '');
+  const [precioMin, setPrecioMin] = useState<string>(searchParams.get('precioMin') || '');
+  const [precioMax, setPrecioMax] = useState<string>(searchParams.get('precioMax') || '');
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
   // Verificar autenticación y mensajes
   useEffect(() => {
@@ -44,7 +58,7 @@ const MisReservas: React.FC = () => {
       loadReservas();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, filtroEstado, user]);
+  }, [currentPage, filtroEstado, busquedaTitulo, fechaDesde, fechaHasta, precioMin, precioMax, user]);
 
   const loadReservas = async () => {
     try {
@@ -59,9 +73,14 @@ const MisReservas: React.FC = () => {
           filtroEstado
         );
         
-        setReservas(response.content);
-        setTotalPages(response.totalPages);
-        setTotalElements(response.totalElements);
+        let reservasFiltradas = response.content;
+        
+        // Aplicar filtros avanzados en client-side
+        reservasFiltradas = aplicarFiltrosAvanzados(reservasFiltradas);
+        
+        setReservas(reservasFiltradas);
+        setTotalPages(Math.ceil(reservasFiltradas.length / 6));
+        setTotalElements(reservasFiltradas.length);
       } else {
         // Para "Todas", implementar paginación client-side
         const response = await reservaService.obtenerMisReservas(
@@ -70,7 +89,11 @@ const MisReservas: React.FC = () => {
           undefined // Sin filtro
         );
         
-        const todasLasReservas = response.content;
+        let todasLasReservas = response.content;
+        
+        // Aplicar filtros avanzados
+        todasLasReservas = aplicarFiltrosAvanzados(todasLasReservas);
+        
         const pageSize = 6;
         
         // Ordenar por fecha de reserva DESC
@@ -96,6 +119,80 @@ const MisReservas: React.FC = () => {
     }
   };
 
+  // Función para aplicar filtros avanzados
+  const aplicarFiltrosAvanzados = (reservas: ReservaDetalleDTO[]): ReservaDetalleDTO[] => {
+    let resultado = [...reservas];
+
+    // Filtro por título de experiencia
+    if (busquedaTitulo.trim()) {
+      const busqueda = busquedaTitulo.toLowerCase().trim();
+      resultado = resultado.filter(r => 
+        r.tituloExperiencia.toLowerCase().includes(busqueda)
+      );
+    }
+
+    // Filtro por rango de fechas (fecha de inicio de la salida)
+    if (fechaDesde) {
+      const desde = new Date(fechaDesde);
+      resultado = resultado.filter(r => 
+        new Date(r.fechaInicio) >= desde
+      );
+    }
+
+    if (fechaHasta) {
+      const hasta = new Date(fechaHasta);
+      hasta.setHours(23, 59, 59, 999); // Incluir todo el día
+      resultado = resultado.filter(r => 
+        new Date(r.fechaInicio) <= hasta
+      );
+    }
+
+    // Filtro por rango de precio
+    if (precioMin) {
+      const min = parseFloat(precioMin);
+      resultado = resultado.filter(r => r.precioTotal >= min);
+    }
+
+    if (precioMax) {
+      const max = parseFloat(precioMax);
+      resultado = resultado.filter(r => r.precioTotal <= max);
+    }
+
+    return resultado;
+  };
+
+  // Actualizar URL con query params
+  const actualizarFiltrosEnURL = () => {
+    const params = new URLSearchParams();
+    
+    if (filtroEstado) params.set('estado', filtroEstado);
+    if (busquedaTitulo) params.set('titulo', busquedaTitulo);
+    if (fechaDesde) params.set('desde', fechaDesde);
+    if (fechaHasta) params.set('hasta', fechaHasta);
+    if (precioMin) params.set('precioMin', precioMin);
+    if (precioMax) params.set('precioMax', precioMax);
+
+    setSearchParams(params);
+  };
+
+  // Limpiar todos los filtros
+  const limpiarFiltros = () => {
+    setBusquedaTitulo('');
+    setFechaDesde('');
+    setFechaHasta('');
+    setPrecioMin('');
+    setPrecioMax('');
+    setCurrentPage(0);
+    setSearchParams(new URLSearchParams());
+  };
+
+  // Aplicar filtros y actualizar URL
+  const aplicarFiltros = () => {
+    setCurrentPage(0);
+    actualizarFiltrosEnURL();
+    loadReservas();
+  };
+
   const handlePageChange = (newPage: number) => {
     if (newPage >= 0 && newPage < totalPages) {
       setCurrentPage(newPage);
@@ -105,6 +202,7 @@ const MisReservas: React.FC = () => {
   const handleEstadoFilter = (estado: string) => {
     setFiltroEstado(estado);
     setCurrentPage(0); // Reset a la primera página
+    actualizarFiltrosEnURL();
   };
 
   const handleCancelarReserva = async (reservaId: number) => {
@@ -269,11 +367,125 @@ const MisReservas: React.FC = () => {
                   </div>
                 </div>
                 <div className="col-md-4 text-end">
+                  <button
+                    className="btn btn-sm btn-outline-secondary me-2"
+                    onClick={() => setMostrarFiltros(!mostrarFiltros)}
+                  >
+                    <i className={`fas fa-filter me-1`}></i>
+                    Filtros Avanzados
+                  </button>
                   <small className="text-muted">
                     {loading ? 'Actualizando...' : `${reservas?.length || 0} de ${totalElements} reservas`}
                   </small>
                 </div>
               </div>
+
+              {/* Panel de Filtros Avanzados */}
+              {mostrarFiltros && (
+                <div className="mt-3 pt-3 border-top">
+                  <div className="row g-3">
+                    <div className="col-md-4">
+                      <label className="form-label small mb-1">
+                        <i className="fas fa-search me-1"></i>
+                        Buscar por título
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        placeholder="Nombre de la experiencia..."
+                        value={busquedaTitulo}
+                        onChange={(e) => setBusquedaTitulo(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="col-md-4">
+                      <label className="form-label small mb-1">
+                        <i className="fas fa-calendar me-1"></i>
+                        Fecha desde
+                      </label>
+                      <input
+                        type="date"
+                        className="form-control form-control-sm"
+                        value={fechaDesde}
+                        onChange={(e) => setFechaDesde(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="col-md-4">
+                      <label className="form-label small mb-1">
+                        <i className="fas fa-calendar me-1"></i>
+                        Fecha hasta
+                      </label>
+                      <input
+                        type="date"
+                        className="form-control form-control-sm"
+                        value={fechaHasta}
+                        onChange={(e) => setFechaHasta(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="col-md-3">
+                      <label className="form-label small mb-1">
+                        <i className="fas fa-dollar-sign me-1"></i>
+                        Precio mínimo
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm"
+                        placeholder="0"
+                        value={precioMin}
+                        onChange={(e) => setPrecioMin(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="col-md-3">
+                      <label className="form-label small mb-1">
+                        <i className="fas fa-dollar-sign me-1"></i>
+                        Precio máximo
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm"
+                        placeholder="999999"
+                        value={precioMax}
+                        onChange={(e) => setPrecioMax(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="col-md-6 d-flex align-items-end">
+                      <button
+                        className="btn btn-sm btn-primary me-2"
+                        onClick={aplicarFiltros}
+                      >
+                        <i className="fas fa-check me-1"></i>
+                        Aplicar Filtros
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-secondary"
+                        onClick={limpiarFiltros}
+                      >
+                        <i className="fas fa-times me-1"></i>
+                        Limpiar
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Indicador de filtros activos */}
+                  {(busquedaTitulo || fechaDesde || fechaHasta || precioMin || precioMax) && (
+                    <div className="mt-2">
+                      <small className="text-primary">
+                        <i className="fas fa-info-circle me-1"></i>
+                        Filtros activos: 
+                        {busquedaTitulo && ` Título`}
+                        {fechaDesde && ` Desde ${fechaDesde}`}
+                        {fechaHasta && ` Hasta ${fechaHasta}`}
+                        {precioMin && ` Precio ≥ $${precioMin}`}
+                        {precioMax && ` Precio ≤ $${precioMax}`}
+                      </small>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -317,6 +529,15 @@ const MisReservas: React.FC = () => {
               </Link>
             </div>
           </div>
+        </div>
+      ) : loading ? (
+        /* Skeleton Loaders mientras carga */
+        <div className="row">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="col-md-6 col-lg-4 mb-4">
+              <SkeletonCard variant="reserva" />
+            </div>
+          ))}
         </div>
       ) : reservas && reservas.length > 0 ? (
         <>
@@ -411,13 +632,13 @@ const MisReservas: React.FC = () => {
                   {/* Footer con acciones */}
                   <div className="card-footer bg-transparent">
                     <div className="d-flex gap-2">
-                      <Link
-                        to={`/experiencias/${reserva.salidaId}`}
-                        className="btn btn-sm btn-outline-primary flex-fill"
+                      <button
+                        className="btn btn-sm btn-primary flex-fill"
+                        onClick={() => setReservaSeleccionada(reserva)}
                       >
-                        <i className="fas fa-eye me-1"></i>
-                        Ver
-                      </Link>
+                        <i className="fas fa-info-circle me-1"></i>
+                        Ver Detalle
+                      </button>
                       
                       {(reserva.estado === 'PENDIENTE' || reserva.estado === 'CONFIRMADA') && (
                         <button
@@ -481,6 +702,15 @@ const MisReservas: React.FC = () => {
           )}
         </>
       ) : null}
+
+      {/* Modal de Detalle */}
+      {reservaSeleccionada && (
+        <ReservaDetailModal
+          reserva={reservaSeleccionada}
+          onClose={() => setReservaSeleccionada(null)}
+          onCancelar={handleCancelarReserva}
+        />
+      )}
     </div>
   );
 };

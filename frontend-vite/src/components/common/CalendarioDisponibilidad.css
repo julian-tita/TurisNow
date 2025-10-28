@@ -1,0 +1,329 @@
+/* TurisNow: Calendario de Disponibilidad Styles */
+
+.calendario-disponibilidad {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.calendario-header {
+  margin-bottom: 1.5rem;
+}
+
+.calendario-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+/* Leyenda */
+.leyenda {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding: 0.75rem;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.leyenda-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #e2e8f0;
+}
+
+.leyenda-color.disponible {
+  background-color: #48bb78;
+}
+
+.leyenda-color.limitado {
+  background-color: #ffc107;
+}
+
+.leyenda-color.sin-cupos {
+  background-color: #e53e3e;
+}
+
+.leyenda-texto {
+  font-size: 0.875rem;
+  color: #4a5568;
+}
+
+/* Estilos del calendario react-calendar */
+.react-calendar {
+  width: 100%;
+  border: none;
+  font-family: inherit;
+  border-radius: 8px;
+}
+
+.react-calendar__navigation {
+  display: flex;
+  height: 50px;
+  margin-bottom: 1rem;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+
+.react-calendar__navigation button {
+  min-width: 44px;
+  background: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background-color: #e2e8f0;
+  border-radius: 6px;
+}
+
+.react-calendar__navigation button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #718096;
+  padding: 0.5rem 0;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 0.5rem;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  padding: 0.5rem;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+}
+
+.react-calendar__tile {
+  max-width: 100%;
+  padding: 0.75rem 0.5rem;
+  background: none;
+  text-align: center;
+  line-height: 1.2;
+  position: relative;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  transition: all 0.2s;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background-color: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+/* Fechas pasadas */
+.react-calendar__tile.fecha-pasada {
+  color: #cbd5e0;
+  background-color: #f7fafc;
+  cursor: not-allowed;
+}
+
+.react-calendar__tile.fecha-pasada:enabled:hover {
+  background-color: #f7fafc;
+  border-color: transparent;
+}
+
+/* Estados de disponibilidad */
+.react-calendar__tile.disponibilidad-disponible {
+  background-color: #e6ffed;
+  color: #22543d;
+  border-color: #48bb78;
+}
+
+.react-calendar__tile.disponibilidad-disponible:enabled:hover {
+  background-color: #c6f6d5;
+  border-color: #38a169;
+  transform: scale(1.05);
+}
+
+.react-calendar__tile.disponibilidad-limitado {
+  background-color: #fff3cd;
+  color: #744210;
+  border-color: #ffc107;
+}
+
+.react-calendar__tile.disponibilidad-limitado:enabled:hover {
+  background-color: #ffe69c;
+  border-color: #e0a800;
+  transform: scale(1.05);
+}
+
+.react-calendar__tile.disponibilidad-sin-cupos {
+  background-color: #fed7d7;
+  color: #742a2a;
+  border-color: #e53e3e;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.react-calendar__tile.disponibilidad-sin-cupos:enabled:hover {
+  background-color: #fed7d7;
+  border-color: #e53e3e;
+  transform: none;
+}
+
+.react-calendar__tile.disponibilidad-no-disponible {
+  background-color: #f7fafc;
+  color: #a0aec0;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.react-calendar__tile.disponibilidad-no-disponible:enabled:hover {
+  background-color: #f7fafc;
+  border-color: transparent;
+  transform: none;
+}
+
+/* Fecha seleccionada */
+.react-calendar__tile.fecha-seleccionada {
+  border: 3px solid #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
+  font-weight: 700;
+}
+
+/* Indicador de cupos en el tile */
+.tile-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.cupos-disponibles {
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 2px 4px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  margin-top: 2px;
+}
+
+/* Información de fecha seleccionada */
+.fecha-seleccionada-info {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+  text-align: center;
+}
+
+.info-titulo {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  opacity: 0.9;
+}
+
+.info-fecha {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-transform: capitalize;
+}
+
+.info-cupos {
+  font-size: 0.875rem;
+  margin-bottom: 0;
+}
+
+.info-cupos strong {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .calendario-disponibilidad {
+    padding: 1rem;
+  }
+
+  .leyenda {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .react-calendar__tile {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .cupos-disponibles {
+    font-size: 0.5rem;
+    padding: 1px 2px;
+  }
+}
+
+/* Tema oscuro */
+@media (prefers-color-scheme: dark) {
+  .calendario-disponibilidad {
+    background: #2d3748;
+    color: #e2e8f0;
+  }
+
+  .calendario-header h3 {
+    color: #e2e8f0;
+  }
+
+  .leyenda {
+    background: #1a202c;
+  }
+
+  .leyenda-texto {
+    color: #cbd5e0;
+  }
+
+  .react-calendar__navigation {
+    background: #1a202c;
+  }
+
+  .react-calendar__navigation button {
+    color: #e2e8f0;
+  }
+
+  .react-calendar__navigation button:enabled:hover,
+  .react-calendar__navigation button:enabled:focus {
+    background-color: #4a5568;
+  }
+
+  .react-calendar__month-view__weekdays {
+    color: #a0aec0;
+    border-bottom-color: #4a5568;
+  }
+
+  .react-calendar__tile:enabled:hover,
+  .react-calendar__tile:enabled:focus {
+    background-color: #4a5568;
+    border-color: #718096;
+  }
+
+  .react-calendar__tile.fecha-pasada {
+    background-color: #1a202c;
+    color: #4a5568;
+  }
+}

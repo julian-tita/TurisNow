@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import experienciaService from '../../services/experienciaService';
 import type { ExperienciaListadoDTO, ExperienciasResponse, Categoria } from '../../types/experiencia.types';
+import SkeletonCard from '../common/SkeletonCard';
 
 interface ExperienciasListProps {
   showFilters?: boolean;
@@ -16,13 +18,30 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
   categoria,
   className = ''
 }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [experiencias, setExperiencias] = useState<ExperienciaListadoDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Filtros
-  const [filtroCategoria, setFiltroCategoria] = useState<Categoria | ''>('');
-  const [filtroUbicacion, setFiltroUbicacion] = useState('');
+  // Filtros básicos
+  const [filtroCategoria, setFiltroCategoria] = useState<Categoria | ''>(
+    (searchParams.get('categoria') as Categoria) || ''
+  );
+  const [filtroUbicacion, setFiltroUbicacion] = useState(
+    searchParams.get('ubicacion') || ''
+  );
+  
+  // Filtros avanzados
+  const [busquedaTitulo, setBusquedaTitulo] = useState(
+    searchParams.get('titulo') || ''
+  );
+  const [precioMin, setPrecioMin] = useState(
+    searchParams.get('precioMin') || ''
+  );
+  const [precioMax, setPrecioMax] = useState(
+    searchParams.get('precioMax') || ''
+  );
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
   
   // Paginación
   const [currentPage, setCurrentPage] = useState(0);
@@ -49,7 +68,7 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
   useEffect(() => {
     loadExperiencias();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, filtroCategoria, filtroUbicacion]);
+  }, [currentPage, filtroCategoria, filtroUbicacion, busquedaTitulo, precioMin, precioMax]);
 
   const loadExperiencias = async () => {
     try {
@@ -67,21 +86,87 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
 
       const response: ExperienciasResponse = await experienciaService.getAllExperiencias(filters);
       
-      setExperiencias(response.content);
-      setTotalPages(response.totalPages);
-      setTotalElements(response.totalElements);
+      let experienciasFiltradas = response.content;
+
+      // Aplicar filtros avanzados en client-side
+      experienciasFiltradas = aplicarFiltrosAvanzados(experienciasFiltradas);
+
+      setExperiencias(experienciasFiltradas);
+      setTotalPages(Math.ceil(experienciasFiltradas.length / pageSize));
+      setTotalElements(experienciasFiltradas.length);
       
     } catch (error: any) {
-      console.error('Error loading experiencias:', error);
-      setError('Error al cargar las experiencias. Por favor, intenta nuevamente.');
+      const errorMsg = 'Error al cargar las experiencias. Por favor, intenta nuevamente.';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
+  // Aplicar filtros avanzados
+  const aplicarFiltrosAvanzados = (experiencias: ExperienciaListadoDTO[]): ExperienciaListadoDTO[] => {
+    let resultado = [...experiencias];
+
+    // Filtro por título
+    if (busquedaTitulo.trim()) {
+      const busqueda = busquedaTitulo.toLowerCase().trim();
+      resultado = resultado.filter(exp => 
+        exp.titulo.toLowerCase().includes(busqueda) ||
+        exp.descripcion?.toLowerCase().includes(busqueda)
+      );
+    }
+
+    // Filtro por precio mínimo
+    if (precioMin) {
+      const min = parseFloat(precioMin);
+      resultado = resultado.filter(exp => exp.precio >= min);
+    }
+
+    // Filtro por precio máximo
+    if (precioMax) {
+      const max = parseFloat(precioMax);
+      resultado = resultado.filter(exp => exp.precio <= max);
+    }
+
+    return resultado;
+  };
+
+  // Actualizar URL con query params
+  const actualizarFiltrosEnURL = () => {
+    const params = new URLSearchParams();
+    
+    if (filtroCategoria) params.set('categoria', filtroCategoria);
+    if (filtroUbicacion) params.set('ubicacion', filtroUbicacion);
+    if (busquedaTitulo) params.set('titulo', busquedaTitulo);
+    if (precioMin) params.set('precioMin', precioMin);
+    if (precioMax) params.set('precioMax', precioMax);
+
+    setSearchParams(params);
+  };
+
+  // Limpiar todos los filtros
+  const limpiarFiltros = () => {
+    setBusquedaTitulo('');
+    setPrecioMin('');
+    setPrecioMax('');
+    setFiltroCategoria('');
+    setFiltroUbicacion('');
+    setCurrentPage(0);
+    setSearchParams(new URLSearchParams());
+  };
+
+  // Aplicar filtros y actualizar URL
+  const aplicarFiltros = () => {
+    setCurrentPage(0);
+    actualizarFiltrosEnURL();
+    loadExperiencias();
+  };
+
   const handleCategoriaChange = (nuevaCategoria: Categoria | '') => {
     setFiltroCategoria(nuevaCategoria);
     setCurrentPage(0);
+    actualizarFiltrosEnURL();
   };
 
   const handleUbicacionChange = (nuevaUbicacion: string) => {
@@ -90,9 +175,7 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
   };
 
   const clearFilters = () => {
-    setFiltroCategoria('');
-    setFiltroUbicacion('');
-    setCurrentPage(0);
+    limpiarFiltros();
   };
 
   const handlePageChange = (newPage: number) => {
@@ -116,16 +199,7 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
     return `${ubicacion.ciudad}, ${ubicacion.pais}`;
   };
 
-  if (loading && experiencias.length === 0) {
-    return (
-      <div className="experiencias-loading">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Cargando experiencias...</p>
-        </div>
-      </div>
-    );
-  }
+  // Removed: showing skeletons inline instead of separate loading state
 
   return (
     <div className={`experiencias-list-container ${className}`}>
@@ -133,13 +207,23 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
         <div className="experiencias-filters">
           <div className="filters-header">
             <h3>🔍 Filtrar Experiencias</h3>
-            <button 
-              className="btn-clear-filters"
-              onClick={clearFilters}
-              disabled={!filtroCategoria && !filtroUbicacion}
-            >
-              🗑️ Limpiar
-            </button>
+            <div className="d-flex gap-2">
+              <button 
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setMostrarFiltros(!mostrarFiltros)}
+              >
+                <i className="fas fa-sliders-h me-1"></i>
+                Filtros Avanzados
+              </button>
+              <button 
+                className="btn btn-sm btn-outline-danger"
+                onClick={clearFilters}
+                disabled={!filtroCategoria && !filtroUbicacion && !busquedaTitulo && !precioMin && !precioMax}
+              >
+                <i className="fas fa-times me-1"></i>
+                Limpiar
+              </button>
+            </div>
           </div>
 
           <div className="filters-row">
@@ -150,7 +234,7 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
                 id="categoria-filter"
                 value={filtroCategoria}
                 onChange={(e) => handleCategoriaChange(e.target.value as Categoria | '')}
-                className="filter-select"
+                className="filter-select form-select"
               >
                 <option value="">Todas las categorías</option>
                 {categorias.map((cat) => (
@@ -170,10 +254,82 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
                 placeholder="Ej: Buenos Aires, París..."
                 value={filtroUbicacion}
                 onChange={(e) => handleUbicacionChange(e.target.value)}
-                className="filter-input"
+                className="filter-input form-control"
               />
             </div>
           </div>
+
+          {/* Panel de Filtros Avanzados */}
+          {mostrarFiltros && (
+            <div className="advanced-filters mt-3 pt-3 border-top">
+              <div className="row g-3">
+                <div className="col-md-4">
+                  <label className="form-label small mb-1">
+                    <i className="fas fa-search me-1"></i>
+                    Buscar por título
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    placeholder="Nombre de la experiencia..."
+                    value={busquedaTitulo}
+                    onChange={(e) => setBusquedaTitulo(e.target.value)}
+                  />
+                </div>
+
+                <div className="col-md-3">
+                  <label className="form-label small mb-1">
+                    <i className="fas fa-dollar-sign me-1"></i>
+                    Precio mínimo
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control form-control-sm"
+                    placeholder="0"
+                    value={precioMin}
+                    onChange={(e) => setPrecioMin(e.target.value)}
+                  />
+                </div>
+
+                <div className="col-md-3">
+                  <label className="form-label small mb-1">
+                    <i className="fas fa-dollar-sign me-1"></i>
+                    Precio máximo
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control form-control-sm"
+                    placeholder="999999"
+                    value={precioMax}
+                    onChange={(e) => setPrecioMax(e.target.value)}
+                  />
+                </div>
+
+                <div className="col-md-2 d-flex align-items-end">
+                  <button
+                    className="btn btn-sm btn-primary w-100"
+                    onClick={aplicarFiltros}
+                  >
+                    <i className="fas fa-check me-1"></i>
+                    Aplicar
+                  </button>
+                </div>
+              </div>
+
+              {/* Indicador de filtros activos */}
+              {(busquedaTitulo || precioMin || precioMax) && (
+                <div className="mt-2">
+                  <small className="text-primary">
+                    <i className="fas fa-info-circle me-1"></i>
+                    Filtros activos: 
+                    {busquedaTitulo && ` Título`}
+                    {precioMin && ` Precio ≥ $${precioMin}`}
+                    {precioMax && ` Precio ≤ $${precioMax}`}
+                  </small>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Resultados info */}
           <div className="results-info">
@@ -209,7 +365,14 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
         </div>
       )}
 
-      {experiencias.length > 0 && (
+      {loading ? (
+        /* Skeleton Loaders mientras carga */
+        <div className="experiencias-grid">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <SkeletonCard key={i} variant="experiencia" />
+          ))}
+        </div>
+      ) : experiencias.length > 0 ? (
         <>
           <div className="experiencias-grid">
             {experiencias.map((experiencia) => (
@@ -323,13 +486,7 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
             </div>
           )}
         </>
-      )}
-
-      {loading && experiencias.length > 0 && (
-        <div className="loading-overlay">
-          <div className="spinner"></div>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 };

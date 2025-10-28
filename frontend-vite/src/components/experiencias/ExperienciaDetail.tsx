@@ -5,6 +5,8 @@ import experienciaService from '../../services/experienciaService';
 import type { ExperienciaDetalleDTO } from '../../types/experiencia.types';
 import { useCart } from '../../contexts/CartContext';
 import { useLikes } from '../../contexts/LikeContext';
+import SkeletonCard from '../common/SkeletonCard';
+import CalendarioDisponibilidad from '../common/CalendarioDisponibilidad';
 
 const ExperienciaDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +15,8 @@ const ExperienciaDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSalida, setSelectedSalida] = useState<number | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [vistaCalendario, setVistaCalendario] = useState(false);
   
   // Cart and Likes functionality
   const { add } = useCart();
@@ -54,6 +58,15 @@ const ExperienciaDetail: React.FC = () => {
     };
     
     toggle(likeItem);
+  };
+
+  // Handler para la selección de fecha en el calendario
+  const handleDateSelect = (fecha: Date, salidaId: number | null) => {
+    setSelectedDate(fecha);
+    if (salidaId) {
+      setSelectedSalida(salidaId);
+      toast.success('Fecha seleccionada correctamente');
+    }
   };
 
   const isLiked = experiencia ? has(experiencia.id) : false;
@@ -170,11 +183,8 @@ const ExperienciaDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="experiencia-detail-loading">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Cargando experiencia...</p>
-        </div>
+      <div className="experiencia-detail-container">
+        <SkeletonCard variant="experienciaDetail" />
       </div>
     );
   }
@@ -271,13 +281,37 @@ const ExperienciaDetail: React.FC = () => {
 
             {/* Fechas Disponibles */}
             <section className="salidas-section">
-              <h2>📅 Fechas Disponibles</h2>
+              <div className="salidas-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h2>📅 Fechas Disponibles</h2>
+                {experiencia.salidas.length > 0 && (
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => setVistaCalendario(!vistaCalendario)}
+                  >
+                    {vistaCalendario ? '📋 Vista Lista' : '📅 Vista Calendario'}
+                  </button>
+                )}
+              </div>
+
               {experiencia.salidas.length === 0 ? (
                 <div className="no-salidas">
                   <p>⚠️ No hay fechas disponibles para esta experiencia en este momento.</p>
                   <p>Contáctanos para más información sobre próximas salidas.</p>
                 </div>
+              ) : vistaCalendario ? (
+                /* Vista Calendario */
+                <CalendarioDisponibilidad
+                  salidas={experiencia.salidas.map(s => ({
+                    id: s.id,
+                    fechaInicio: s.fechaInicio,
+                    capacidadDisponible: s.capacidadDisponible,
+                    capacidadTotal: s.capacidadTotal
+                  }))}
+                  onDateSelect={handleDateSelect}
+                  selectedDate={selectedDate}
+                />
               ) : (
+                /* Vista Lista */
                 <div className="salidas-grid">
                   {experiencia.salidas.map((salida) => {
                     const status = getCapacidadStatus(salida.capacidadDisponible, salida.capacidadTotal);
@@ -288,7 +322,12 @@ const ExperienciaDetail: React.FC = () => {
                       <div 
                         key={salida.id}
                         className={`salida-card ${isSelected ? 'selected' : ''} ${!isDisponible ? 'disabled' : ''}`}
-                        onClick={() => isDisponible && setSelectedSalida(salida.id)}
+                        onClick={() => {
+                          if (isDisponible) {
+                            setSelectedSalida(salida.id);
+                            setSelectedDate(new Date(salida.fechaInicio));
+                          }
+                        }}
                       >
                         <div className="salida-date">
                           <div className="date-main">

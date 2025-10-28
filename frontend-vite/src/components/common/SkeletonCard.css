@@ -1,0 +1,136 @@
+/* TurisNow: Skeleton Loader Styles */
+
+.skeleton-card {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Skeleton elements */
+.skeleton-text,
+.skeleton-title,
+.skeleton-subtitle,
+.skeleton-image,
+.skeleton-button,
+.skeleton-badge,
+.skeleton-circle {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0%,
+    #f8f8f8 50%,
+    #f0f0f0 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Skeleton text variations */
+.skeleton-text {
+  height: 16px;
+  width: 100%;
+}
+
+.skeleton-title {
+  height: 24px;
+  width: 80%;
+}
+
+.skeleton-subtitle {
+  height: 18px;
+  width: 60%;
+}
+
+/* Skeleton image */
+.skeleton-image {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+}
+
+/* Skeleton button */
+.skeleton-button {
+  height: 38px;
+  border-radius: 4px;
+}
+
+/* Skeleton badge */
+.skeleton-badge {
+  height: 24px;
+  width: 80px;
+  border-radius: 12px;
+}
+
+/* Skeleton circle (for icons) */
+.skeleton-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .skeleton-text,
+  .skeleton-title,
+  .skeleton-subtitle,
+  .skeleton-image,
+  .skeleton-button,
+  .skeleton-badge,
+  .skeleton-circle {
+    background: linear-gradient(
+      90deg,
+      #2a2a2a 0%,
+      #3a3a3a 50%,
+      #2a2a2a 100%
+    );
+    background-size: 200% 100%;
+  }
+}
+
+/* Skeleton card specific styles */
+.skeleton-card .card-header,
+.skeleton-card .card-footer {
+  background-color: #fafafa;
+}
+
+/* KPI Card skeleton adjustments */
+.kpi-card.skeleton-card {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fff;
+  gap: 15px;
+}
+
+.kpi-card.skeleton-card .kpi-content {
+  flex: 1;
+}
+
+/* Prevent text selection on skeleton elements */
+.skeleton-text,
+.skeleton-title,
+.skeleton-subtitle,
+.skeleton-image,
+.skeleton-button,
+.skeleton-badge,
+.skeleton-circle {
+  user-select: none;
+  pointer-events: none;
+}
