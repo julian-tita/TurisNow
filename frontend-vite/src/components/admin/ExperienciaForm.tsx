@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { experienciaService } from '../../services/experienciaService';
 import type { 
   ExperienciaRequest, 
@@ -128,18 +129,23 @@ const ExperienciaForm: React.FC<ExperienciaFormProps> = ({
     try {
       setLoading(true);
       
+      const toastId = toast.loading(experiencia?.id ? 'Actualizando experiencia...' : 'Creando experiencia...');
+      
       if (experiencia?.id) {
         // Update existing
         await experienciaService.updateExperiencia(experiencia.id, formData);
+        toast.success('Experiencia actualizada exitosamente', { id: toastId });
       } else {
         // Create new
         await experienciaService.createExperiencia(formData);
+        toast.success('Experiencia creada exitosamente', { id: toastId });
       }
       
       onSave();
-    } catch (error) {
-      console.error('Error saving experiencia:', error);
-      setErrors({ general: 'Error al guardar la experiencia. Por favor intenta de nuevo.' });
+    } catch (error: any) {
+      const errorMsg = 'Error al guardar la experiencia. Por favor intenta de nuevo.';
+      setErrors({ general: errorMsg });
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

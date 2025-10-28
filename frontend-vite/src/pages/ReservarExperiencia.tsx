@@ -1,6 +1,7 @@
 // TurisNow: Reservation Checkout Page - Mercado Libre Style with 5 Steps
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import experienciaService from '../services/experienciaService';
 import reservaService from '../services/reservaService';
@@ -74,8 +75,9 @@ const ReservarExperiencia: React.FC = () => {
       const data = await experienciaService.getExperienciaById(parseInt(experienciaId!));
       setExperiencia(data);
     } catch (err: any) {
-      console.error('Error loading experiencia:', err);
-      setError(err.message || 'Error al cargar la experiencia');
+      const errorMsg = err.message || 'Error al cargar la experiencia';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -219,10 +221,13 @@ const ReservarExperiencia: React.FC = () => {
 
       // 6. Limpiar drafts del localStorage
       localStorage.removeItem('reservation.draft');
+      
+      toast.success('¡Reserva confirmada exitosamente!');
 
     } catch (err: any) {
-      console.error('Error al procesar reserva:', err);
-      setPaymentError(err.message || 'Error al procesar la reserva. Por favor, intenta nuevamente.');
+      const errorMsg = err.message || 'Error al procesar la reserva. Por favor, intenta nuevamente.';
+      setPaymentError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setProcessingPayment(false);
     }

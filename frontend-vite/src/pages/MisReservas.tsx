@@ -1,6 +1,7 @@
 // TurisNow: User Reservations Management Page
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import reservaService from '../services/reservaService';
 import type { ReservaDetalleDTO } from '../services/reservaService';
@@ -50,18 +51,46 @@ const MisReservas: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await reservaService.obtenerMisReservas(
-        currentPage, 
-        6, // 6 reservas por página
-        filtroEstado || undefined
-      );
-      
-      setReservas(response.content);
-      setTotalPages(response.totalPages);
-      setTotalElements(response.totalElements);
+      // Si hay un filtro específico por estado, usar el endpoint con estado
+      if (filtroEstado && filtroEstado !== '') {
+        const response = await reservaService.obtenerMisReservas(
+          currentPage, 
+          6, // 6 reservas por página
+          filtroEstado
+        );
+        
+        setReservas(response.content);
+        setTotalPages(response.totalPages);
+        setTotalElements(response.totalElements);
+      } else {
+        // Para "Todas", implementar paginación client-side
+        const response = await reservaService.obtenerMisReservas(
+          0, // Siempre página 0 porque queremos todas
+          1000, // Límite alto para obtener todas
+          undefined // Sin filtro
+        );
+        
+        const todasLasReservas = response.content;
+        const pageSize = 6;
+        
+        // Ordenar por fecha de reserva DESC
+        const reservasOrdenadas = todasLasReservas.sort((a, b) => 
+          new Date(b.fechaReserva).getTime() - new Date(a.fechaReserva).getTime()
+        );
+        
+        // Calcular paginación en el cliente
+        const startIndex = currentPage * pageSize;
+        const endIndex = startIndex + pageSize;
+        const reservasPaginadas = reservasOrdenadas.slice(startIndex, endIndex);
+        
+        setReservas(reservasPaginadas);
+        setTotalElements(todasLasReservas.length);
+        setTotalPages(Math.ceil(todasLasReservas.length / pageSize));
+      }
     } catch (err: any) {
-      console.error('Error loading reservations:', err);
-      setError(err.message || 'Error al cargar las reservas');
+      const errorMessage = err.message || 'Error al cargar las reservas';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -83,12 +112,43 @@ const MisReservas: React.FC = () => {
       return;
     }
 
+    // Optimistic UI: Actualizar estado local inmediatamente
+    const reservaOriginal = reservas.find(r => r.id === reservaId);
+    if (!reservaOriginal) return;
+
+    // Guardar estado anterior para rollback
+    const estadoAnterior = reservaOriginal.estado;
+    
+    // Actualizar UI inmediatamente
+    setReservas(prev => 
+      prev.map(r => r.id === reservaId 
+        ? { ...r, estado: 'CANCELADA' } 
+        : r
+      )
+    );
+
+    // Mostrar toast de loading
+    const toastId = toast.loading('Cancelando reserva...');
+
     try {
       await reservaService.cancelarReserva(reservaId);
-      setSuccessMessage('Reserva cancelada exitosamente');
-      loadReservas(); // Recargar la lista
+      
+      // Actualizar toast a éxito
+      toast.success('Reserva cancelada exitosamente', { id: toastId });
+      
+      // Recargar para asegurar sincronización con el servidor
+      loadReservas();
     } catch (err: any) {
-      setError(err.message || 'Error al cancelar la reserva');
+      // Rollback en caso de error
+      setReservas(prev => 
+        prev.map(r => r.id === reservaId 
+          ? { ...r, estado: estadoAnterior } 
+          : r
+        )
+      );
+      
+      // Actualizar toast a error
+      toast.error(err.message || 'Error al cancelar la reserva', { id: toastId });
     }
   };
 

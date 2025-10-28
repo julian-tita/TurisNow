@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import experienciaService from '../../services/experienciaService';
 import type { ExperienciaDetalleDTO, SalidaDTO } from '../../types/experiencia.types';
 
@@ -39,9 +40,10 @@ const SalidasManagement: React.FC<SalidasManagementProps> = ({
       setError(null);
       const data = await experienciaService.getExperienciaById(experienciaId);
       setExperiencia(data);
-    } catch (err) {
-      console.error('Error loading experiencia:', err);
-      setError('Error al cargar la experiencia');
+    } catch (err: any) {
+      const errorMsg = 'Error al cargar la experiencia';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -164,19 +166,21 @@ const SalidasManagement: React.FC<SalidasManagementProps> = ({
 
       if (editingSalida) {
         // Update existing salida
-        console.log('Updating salida:', editingSalida.id, salidaData);
+        toast.loading('Actualizando salida...');
         // await experienciaService.updateSalida(editingSalida.id, salidaData);
+        toast.success('Salida actualizada exitosamente');
       } else {
         // Create new salida
-        console.log('Creating new salida for experiencia:', experienciaId, salidaData);
+        toast.loading('Creando nueva salida...');
         // await experienciaService.createSalida(experienciaId, salidaData);
+        toast.success('Salida creada exitosamente');
       }
 
       // Reload experiencia data
       await loadExperiencia();
       cancelForm();
-    } catch (err) {
-      console.error('Error saving salida:', err);
+    } catch (err: any) {
+      toast.error('Error al guardar la salida');
       setFormErrors({ general: 'Error al guardar la salida' });
     } finally {
       setSubmitting(false);
@@ -190,12 +194,14 @@ const SalidasManagement: React.FC<SalidasManagementProps> = ({
     }
 
     try {
-      console.log('Deleting salida:', salidaId);
+      const toastId = toast.loading('Eliminando salida...');
       // await experienciaService.deleteSalida(salidaId);
       await loadExperiencia();
-    } catch (err) {
-      console.error('Error deleting salida:', err);
-      setError('Error al eliminar la salida');
+      toast.success('Salida eliminada exitosamente', { id: toastId });
+    } catch (err: any) {
+      const errorMsg = 'Error al eliminar la salida';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 

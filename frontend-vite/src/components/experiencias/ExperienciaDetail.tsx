@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import experienciaService from '../../services/experienciaService';
 import type { ExperienciaDetalleDTO } from '../../types/experiencia.types';
 import { useCart } from '../../contexts/CartContext';
@@ -22,7 +23,7 @@ const ExperienciaDetail: React.FC = () => {
     if (!experiencia) return;
     
     if (!selectedSalida) {
-      alert('Por favor selecciona una fecha para continuar');
+      toast.error('Por favor selecciona una fecha para continuar');
       return;
     }
     
@@ -38,7 +39,7 @@ const ExperienciaDetail: React.FC = () => {
     };
     
     add(cartItem);
-    alert('Experiencia añadida al carrito');
+    toast.success('Experiencia añadida al carrito');
   };
 
   const handleToggleFavorite = () => {
@@ -80,12 +81,14 @@ const ExperienciaDetail: React.FC = () => {
       }
 
     } catch (error: any) {
-      console.error('Error loading experiencia detail:', error);
+      let errorMsg: string;
       if (error.response?.status === 404) {
-        setError('La experiencia que buscas no existe.');
+        errorMsg = 'La experiencia que buscas no existe.';
       } else {
-        setError('Error al cargar la experiencia. Por favor, intenta nuevamente.');
+        errorMsg = 'Error al cargar la experiencia. Por favor, intenta nuevamente.';
       }
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -157,7 +160,7 @@ const ExperienciaDetail: React.FC = () => {
 
   const handleReservar = () => {
     if (!selectedSalida) {
-      alert('Por favor selecciona una fecha para continuar.');
+      toast.error('Por favor selecciona una fecha para continuar.');
       return;
     }
     

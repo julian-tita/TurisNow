@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { experienciaService } from '../../services/experienciaService';
 import type { 
   ExperienciaListadoDTO, 
@@ -42,9 +43,10 @@ const ExperiencesManagement: React.FC = () => {
       
       setPageResponse(response);
       setExperiences(response.content);
-    } catch (err) {
-      console.error('Error loading experiences:', err);
-      setError('Error al cargar las experiencias. Por favor intenta de nuevo.');
+    } catch (err: any) {
+      const errorMsg = 'Error al cargar las experiencias. Por favor intenta de nuevo.';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -87,21 +89,25 @@ const ExperiencesManagement: React.FC = () => {
       const detail = await experienciaService.getExperienciaById(experiencia.id);
       setEditingExperience(detail);
       setShowForm(true);
-    } catch (err) {
-      console.error('Error loading experiencia detail:', err);
-      setError('Error al cargar los detalles de la experiencia');
+    } catch (err: any) {
+      const errorMsg = 'Error al cargar los detalles de la experiencia';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleToggleStatus = async (experienceId: number) => {
+    const toastId = toast.loading('Actualizando estado...');
     try {
       await experienciaService.toggleExperienciaStatus(experienceId);
       await loadExperiences(); // Reload to get updated data
-    } catch (err) {
-      console.error('Error toggling experiencia status:', err);
-      setError('Error al cambiar el estado de la experiencia');
+      toast.success('Estado actualizado exitosamente', { id: toastId });
+    } catch (err: any) {
+      const errorMsg = 'Error al cambiar el estado de la experiencia';
+      setError(errorMsg);
+      toast.error(errorMsg, { id: toastId });
     }
   };
 
@@ -110,12 +116,15 @@ const ExperiencesManagement: React.FC = () => {
       return;
     }
 
+    const toastId = toast.loading('Eliminando experiencia...');
     try {
       await experienciaService.deleteExperiencia(experienceId);
       await loadExperiences(); // Reload data after deletion
-    } catch (err) {
-      console.error('Error deleting experiencia:', err);
-      setError('Error al eliminar la experiencia');
+      toast.success('Experiencia eliminada exitosamente', { id: toastId });
+    } catch (err: any) {
+      const errorMsg = 'Error al eliminar la experiencia';
+      setError(errorMsg);
+      toast.error(errorMsg, { id: toastId });
     }
   };
 
