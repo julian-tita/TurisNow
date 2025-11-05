@@ -15,6 +15,8 @@ public class SwaggerConfig {
     
     @Bean
     public OpenAPI customOpenAPI() {
+        final String securitySchemeName = "bearer-jwt";
+        
         return new OpenAPI()
                 .info(new Info()
                         .title("TurisNow API")
@@ -27,13 +29,15 @@ public class SwaggerConfig {
                         .license(new License()
                                 .name("MIT License")
                                 .url("https://opensource.org/licenses/MIT")))
-                .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
+                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
-                        .addSecuritySchemes("Bearer Authentication", 
+                        .addSecuritySchemes(securitySchemeName, 
                                 new SecurityScheme()
+                                        .name(securitySchemeName)
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
-                                        .description("Ingresa tu token JWT obtenido del endpoint de login")));
+                                        .in(SecurityScheme.In.HEADER)
+                                        .description("Ingresa SOLO el token JWT (sin 'Bearer')")));
     }
 }

@@ -1,8 +1,5 @@
 package app.TurisNow.dto;
 
-import app.TurisNow.model.Usuario;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -10,29 +7,14 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Data
-public class RegistroRequest {
+public class UpdateProfileRequest {
     
-    @NotBlank(message = "El nombre de usuario es obligatorio")
-    @Size(min = 3, max = 50, message = "El nombre de usuario debe tener entre 3 y 50 caracteres")
-    private String username;
-    
-    @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
-    private String password;
-    
-    @NotBlank(message = "El email es obligatorio")
-    @Email(message = "El formato del email no es válido")
-    private String email;
-    
-    @NotBlank(message = "El nombre es obligatorio")
     @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
     private String nombre;
     
-    @NotBlank(message = "El apellido es obligatorio")
     @Size(min = 2, max = 100, message = "El apellido debe tener entre 2 y 100 caracteres")
     private String apellido;
     
-    // Campos opcionales
     @Size(max = 50, message = "El teléfono no puede exceder 50 caracteres")
     private String telefono;
     
@@ -44,6 +26,5 @@ public class RegistroRequest {
     
     @Size(max = 255, message = "La dirección no puede exceder 255 caracteres")
     private String direccion;
-    
-    private Usuario.Rol rol = Usuario.Rol.USER;
 }
+

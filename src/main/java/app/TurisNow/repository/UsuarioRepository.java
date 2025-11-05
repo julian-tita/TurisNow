@@ -1,7 +1,11 @@
 package app.TurisNow.repository;
 
 import app.TurisNow.model.Usuario;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -16,4 +20,22 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByUsername(String username);
     
     boolean existsByEmail(String email);
+    
+    boolean existsByDocumento(String documento);
+    
+    // Búsqueda avanzada para administradores
+    @Query("SELECT u FROM Usuario u WHERE " +
+           "(:query IS NULL OR :query = '' OR " +
+           "LOWER(CAST(u.username AS string)) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(CAST(u.email AS string)) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(CAST(COALESCE(u.nombre, '') AS string)) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(CAST(COALESCE(u.apellido, '') AS string)) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+           "AND (:rol IS NULL OR u.rol = :rol) " +
+           "AND (:activo IS NULL OR u.activo = :activo)")
+    Page<Usuario> buscarUsuarios(
+        @Param("query") String query,
+        @Param("rol") Usuario.Rol rol,
+        @Param("activo") Boolean activo,
+        Pageable pageable
+    );
 }

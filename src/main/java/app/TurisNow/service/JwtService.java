@@ -32,7 +32,10 @@ public class JwtService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("rol", usuario.getRol().name());
         claims.put("email", usuario.getEmail());
-        claims.put("nombreCompleto", usuario.getNombreCompleto());
+        claims.put("nombre", usuario.getNombre());
+        claims.put("apellido", usuario.getApellido());
+        claims.put("nombreCompleto", usuario.getNombreCompleto()); // Por compatibilidad
+        claims.put("userId", usuario.getId());
         return createToken(claims, usuario.getUsername());
     }
     

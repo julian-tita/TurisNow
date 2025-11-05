@@ -27,7 +27,7 @@ public class TestController {
         @ApiResponse(responseCode = "200", description = "Acceso exitoso"),
         @ApiResponse(responseCode = "401", description = "No autorizado - token requerido")
     })
-    @SecurityRequirement(name = "Bearer Authentication")
+    @SecurityRequirement(name = "bearer-jwt")
     @GetMapping("/user")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public String userEndpoint() {
@@ -40,7 +40,7 @@ public class TestController {
         @ApiResponse(responseCode = "401", description = "No autorizado - token requerido"),
         @ApiResponse(responseCode = "403", description = "Prohibido - se requiere rol ADMIN")
     })
-    @SecurityRequirement(name = "Bearer Authentication")
+    @SecurityRequirement(name = "bearer-jwt")
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
     public String adminEndpoint() {
