@@ -31,6 +31,27 @@ const ExperienciaDetail: React.FC = () => {
       toast.error('Por favor selecciona una fecha para continuar');
       return;
     }
+
+    // Validar capacidad disponible
+    const salidaSeleccionada = experiencia.salidas.find(s => s.id === selectedSalida);
+    
+    if (!salidaSeleccionada) {
+      toast.error('Salida no encontrada');
+      return;
+    }
+
+    if (salidaSeleccionada.capacidadDisponible === 0) {
+      toast.error('Esta salida ya no tiene cupos disponibles');
+      return;
+    }
+
+    if (cantidad > salidaSeleccionada.capacidadDisponible) {
+      toast.error(
+        `Solo hay ${salidaSeleccionada.capacidadDisponible} cupo${salidaSeleccionada.capacidadDisponible > 1 ? 's' : ''} disponible${salidaSeleccionada.capacidadDisponible > 1 ? 's' : ''}`,
+        { duration: 5000 }
+      );
+      return;
+    }
     
     await agregarItem({
       experienciaId: experiencia.id,
@@ -158,6 +179,27 @@ const ExperienciaDetail: React.FC = () => {
   const handleReservar = () => {
     if (!selectedSalida) {
       toast.error('Por favor selecciona una fecha para continuar.');
+      return;
+    }
+
+    // Validar capacidad disponible
+    const salidaSeleccionada = experiencia?.salidas.find(s => s.id === selectedSalida);
+    
+    if (!salidaSeleccionada) {
+      toast.error('Salida no encontrada');
+      return;
+    }
+
+    if (salidaSeleccionada.capacidadDisponible === 0) {
+      toast.error('Esta salida ya no tiene cupos disponibles');
+      return;
+    }
+
+    if (cantidad > salidaSeleccionada.capacidadDisponible) {
+      toast.error(
+        `Solo hay ${salidaSeleccionada.capacidadDisponible} cupo${salidaSeleccionada.capacidadDisponible > 1 ? 's' : ''} disponible${salidaSeleccionada.capacidadDisponible > 1 ? 's' : ''}`,
+        { duration: 5000 }
+      );
       return;
     }
     

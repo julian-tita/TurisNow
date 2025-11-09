@@ -6,13 +6,20 @@ const Register = () => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    nombreCompleto: '',
+    nombre: '',
+    apellido: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    // Campos opcionales
+    telefono: '',
+    documento: '',
+    fechaNacimiento: '',
+    direccion: ''
   });
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(''); // Estado para el mensaje de error
@@ -43,8 +50,8 @@ const Register = () => {
 
     // Validaciones
     const newErrors: string[] = [];
-    if (!formData.username || !formData.email || !formData.nombreCompleto || !formData.password) {
-      newErrors.push('Por favor, completa todos los campos');
+    if (!formData.username || !formData.email || !formData.nombre || !formData.apellido || !formData.password) {
+      newErrors.push('Por favor, completa todos los campos obligatorios');
     }
 
     if (formData.username.length < 3 || formData.username.length > 50) {
@@ -56,8 +63,33 @@ const Register = () => {
       newErrors.push('Por favor, ingresa un email válido');
     }
 
-    if (formData.nombreCompleto.length < 2 || formData.nombreCompleto.length > 100) {
-      newErrors.push('El nombre completo debe tener entre 2 y 100 caracteres');
+    if (formData.nombre.length < 2 || formData.nombre.length > 100) {
+      newErrors.push('El nombre debe tener entre 2 y 100 caracteres');
+    }
+
+    if (formData.apellido.length < 2 || formData.apellido.length > 100) {
+      newErrors.push('El apellido debe tener entre 2 y 100 caracteres');
+    }
+
+    // Validaciones opcionales
+    if (formData.telefono && formData.telefono.length > 50) {
+      newErrors.push('El teléfono no puede exceder 50 caracteres');
+    }
+
+    if (formData.documento && formData.documento.length > 50) {
+      newErrors.push('El documento no puede exceder 50 caracteres');
+    }
+
+    if (formData.fechaNacimiento) {
+      const birthDate = new Date(formData.fechaNacimiento);
+      const today = new Date();
+      if (birthDate >= today) {
+        newErrors.push('La fecha de nacimiento debe ser anterior a hoy');
+      }
+    }
+
+    if (formData.direccion && formData.direccion.length > 255) {
+      newErrors.push('La dirección no puede exceder 255 caracteres');
     }
 
     if (formData.password.length < 6) {
@@ -79,13 +111,23 @@ const Register = () => {
     }
 
     try {
-      // Llama a la función de registro del contexto de autenticación
-      const success = await register({
+      // Preparar datos para enviar al backend
+      const registroData: any = {
         username: formData.username.trim(),
         email: formData.email.trim(),
-        nombreCompleto: formData.nombreCompleto.trim(),
+        nombre: formData.nombre.trim(),
+        apellido: formData.apellido.trim(),
         password: formData.password
-      });
+      };
+
+      // Agregar campos opcionales solo si tienen valor
+      if (formData.telefono) registroData.telefono = formData.telefono.trim();
+      if (formData.documento) registroData.documento = formData.documento.trim();
+      if (formData.fechaNacimiento) registroData.fechaNacimiento = formData.fechaNacimiento;
+      if (formData.direccion) registroData.direccion = formData.direccion.trim();
+
+      // Llama a la función de registro del contexto de autenticación
+      const success = await register(registroData);
       
       // Solo redirige al login si el registro fue exitoso
       if (success) {
@@ -172,23 +214,124 @@ const Register = () => {
                   />
                 </div>
 
-                {/* Nombre completo */}
+                {/* Nombre */}
                 <div className="mb-3">
-                  <label htmlFor="nombreCompleto" className="form-label">
-                    <i className="fas fa-id-card me-2 text-primary"></i>
-                    Nombre completo
+                  <label htmlFor="nombre" className="form-label">
+                    <i className="fas fa-user me-2 text-primary"></i>
+                    Nombre <span className="text-danger">*</span>
                   </label>
                   <input
                     type="text"
                     className="form-control form-control-lg"
-                    id="nombreCompleto"
-                    name="nombreCompleto"
-                    value={formData.nombreCompleto}
+                    id="nombre"
+                    name="nombre"
+                    value={formData.nombre}
                     onChange={handleChange}
-                    placeholder="Tu nombre completo"
+                    placeholder="Tu nombre"
                     required
                   />
                 </div>
+
+                {/* Apellido */}
+                <div className="mb-3">
+                  <label htmlFor="apellido" className="form-label">
+                    <i className="fas fa-user me-2 text-primary"></i>
+                    Apellido <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control form-control-lg"
+                    id="apellido"
+                    name="apellido"
+                    value={formData.apellido}
+                    onChange={handleChange}
+                    placeholder="Tu apellido"
+                    required
+                  />
+                </div>
+
+                {/* Campos opcionales toggle */}
+                <div className="mb-3">
+                  <button
+                    type="button"
+                    className="btn btn-link text-decoration-none p-0"
+                    onClick={() => setShowOptionalFields(!showOptionalFields)}
+                  >
+                    <i className={`fas fa-chevron-${showOptionalFields ? 'up' : 'down'} me-2`}></i>
+                    {showOptionalFields ? 'Ocultar' : 'Mostrar'} campos opcionales
+                  </button>
+                </div>
+
+                {/* Campos opcionales */}
+                {showOptionalFields && (
+                  <>
+                    <div className="row">
+                      <div className="col-md-6 mb-3">
+                        <label htmlFor="telefono" className="form-label">
+                          <i className="fas fa-phone me-2 text-primary"></i>
+                          Teléfono
+                        </label>
+                        <input
+                          type="tel"
+                          className="form-control"
+                          id="telefono"
+                          name="telefono"
+                          value={formData.telefono}
+                          onChange={handleChange}
+                          placeholder="+54 9 11 1234-5678"
+                        />
+                      </div>
+
+                      <div className="col-md-6 mb-3">
+                        <label htmlFor="documento" className="form-label">
+                          <i className="fas fa-id-card me-2 text-primary"></i>
+                          Documento
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="documento"
+                          name="documento"
+                          value={formData.documento}
+                          onChange={handleChange}
+                          placeholder="DNI/Pasaporte"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mb-3">
+                      <label htmlFor="fechaNacimiento" className="form-label">
+                        <i className="fas fa-calendar me-2 text-primary"></i>
+                        Fecha de nacimiento
+                      </label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        id="fechaNacimiento"
+                        name="fechaNacimiento"
+                        value={formData.fechaNacimiento}
+                        onChange={handleChange}
+                        max={new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label htmlFor="direccion" className="form-label">
+                        <i className="fas fa-map-marker-alt me-2 text-primary"></i>
+                        Dirección
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="direccion"
+                        name="direccion"
+                        value={formData.direccion}
+                        onChange={handleChange}
+                        placeholder="Calle, número, ciudad, país"
+                      />
+                    </div>
+                  </>
+                )}
 
                 {/* Contraseña */}
                 <div className="mb-3">

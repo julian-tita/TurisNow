@@ -1,10 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { authService } from '../services/authService';
 
 interface User {
+  id?: number;
   username: string;
   email: string;
-  nombreCompleto: string;
+  nombre: string;
+  apellido: string;
+  nombreCompleto?: string;
   rol: 'USER' | 'ADMIN';
 }
 
@@ -12,18 +16,11 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (username: string, password: string) => Promise<boolean>;
-  register: (userData: RegisterData) => Promise<boolean>;
+  register: (userData: any) => Promise<boolean>; // any para aceptar diferentes formatos
   logout: () => void;
   isLoading: boolean;
   error: string | null;
   clearError: () => void;
-}
-
-interface RegisterData {
-  username: string;
-  email: string;
-  nombreCompleto: string;
-  password: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -69,8 +66,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.token) {
         setToken(response.token);
         setUser({
+          id: response.id,
           username: response.username,
           email: response.email,
+          nombre: response.nombre,
+          apellido: response.apellido,
           nombreCompleto: response.nombreCompleto,
           rol: response.rol
         });
@@ -78,8 +78,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Guardar en localStorage
         localStorage.setItem('turisnow_token', response.token);
         localStorage.setItem('turisnow_user', JSON.stringify({
+          id: response.id,
           username: response.username,
           email: response.email,
+          nombre: response.nombre,
+          apellido: response.apellido,
           nombreCompleto: response.nombreCompleto,
           rol: response.rol
         }));
@@ -96,7 +99,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (userData: RegisterData): Promise<boolean> => {
+  const register = async (userData: any): Promise<boolean> => {
     try {
       setIsLoading(true);
       setError(null);
@@ -106,8 +109,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.token) {
         setToken(response.token);
         setUser({
+          id: response.id,
           username: response.username,
           email: response.email,
+          nombre: response.nombre,
+          apellido: response.apellido,
           nombreCompleto: response.nombreCompleto,
           rol: response.rol
         });
@@ -115,8 +121,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Guardar en localStorage
         localStorage.setItem('turisnow_token', response.token);
         localStorage.setItem('turisnow_user', JSON.stringify({
+          id: response.id,
           username: response.username,
           email: response.email,
+          nombre: response.nombre,
+          apellido: response.apellido,
           nombreCompleto: response.nombreCompleto,
           rol: response.rol
         }));

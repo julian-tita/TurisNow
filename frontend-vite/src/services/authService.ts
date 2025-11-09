@@ -11,15 +11,24 @@ export interface LoginRequest {
 export interface RegisterRequest {
   username: string;
   email: string;
-  nombreCompleto: string;
+  nombre: string;
+  apellido: string;
   password: string;
+  // Campos opcionales
+  telefono?: string;
+  documento?: string;
+  fechaNacimiento?: string; // ISO format: YYYY-MM-DD
+  direccion?: string;
 }
 
 export interface AuthResponse {
   token: string;
+  id?: number;
   username: string;
   email: string;
-  nombreCompleto: string;
+  nombre: string;
+  apellido: string;
+  nombreCompleto?: string; // Por compatibilidad
   rol: 'USER' | 'ADMIN';
   message?: string;
 }
