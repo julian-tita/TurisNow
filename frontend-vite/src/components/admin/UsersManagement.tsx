@@ -4,7 +4,9 @@ interface User {
   id: number;
   username: string;
   email: string;
-  nombreCompleto: string;
+  nombre?: string;
+  apellido?: string;
+  nombreCompleto?: string; // Mantener para compatibilidad
   rol: 'USER' | 'ADMIN';
   fechaRegistro?: string;
   activo?: boolean;
@@ -15,6 +17,15 @@ const UsersManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<'ALL' | 'USER' | 'ADMIN'>('ALL');
+
+  // Helper para obtener el nombre completo
+  const getFullName = (user: User): string => {
+    if (user.nombreCompleto) return user.nombreCompleto;
+    if (user.nombre && user.apellido) return `${user.nombre} ${user.apellido}`;
+    if (user.nombre) return user.nombre;
+    if (user.apellido) return user.apellido;
+    return user.username;
+  };
 
   // Simular carga de usuarios (sustituir por llamada API real)
   useEffect(() => {
@@ -73,8 +84,9 @@ const UsersManagement: React.FC = () => {
   }, []);
 
   const filteredUsers = users.filter(user => {
+    const fullName = getFullName(user);
     const matchesSearch = 
-      user.nombreCompleto.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.username.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -210,16 +222,18 @@ const UsersManagement: React.FC = () => {
                 </td>
               </tr>
             ) : (
-              filteredUsers.map(user => (
+              filteredUsers.map(user => {
+                const fullName = getFullName(user);
+                return (
                 <tr key={user.id}>
                   <td>{user.id}</td>
                   <td>
                     <div className="user-cell">
                       <div className="user-avatar">
-                        {user.nombreCompleto.charAt(0).toUpperCase()}
+                        {fullName.charAt(0).toUpperCase()}
                       </div>
                       <div className="user-info">
-                        <span className="user-name">{user.nombreCompleto}</span>
+                        <span className="user-name">{fullName}</span>
                         <span className="user-username">@{user.username}</span>
                       </div>
                     </div>
@@ -272,7 +286,8 @@ const UsersManagement: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ))
+              );
+              })
             )}
           </tbody>
         </table>

@@ -25,13 +25,11 @@ const Header = () => {
     navigate('/login');
   };
 
-  const getInitials = (name: string) => {
-    if (!name) return 'U';
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase();
+  const getInitials = (name?: string, lastName?: string) => {
+    if (!name && !lastName) return 'U';
+    const firstInitial = name ? name[0] : '';
+    const lastInitial = lastName ? lastName[0] : '';
+    return (firstInitial + lastInitial).toUpperCase() || 'U';
   };
 
   return (
@@ -109,11 +107,11 @@ const Header = () => {
                     id="userDropdown"
                   >
                     <div className="user-avatar">
-                      {getInitials(user.nombreCompleto)}
+                      {getInitials(user.nombre, user.apellido)}
                     </div>
                   </button>
                   <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                    <li><Link to="/dashboard" className="dropdown-item">Mi Perfil</Link></li>
+                    <li><Link to="/perfil" className="dropdown-item">Mi Perfil</Link></li>
                     <li><Link to="/mis-reservas" className="dropdown-item">Mis Reservas</Link></li>
                     <li><hr className="dropdown-divider" /></li>
                     <li><button onClick={handleLogout} className="dropdown-item text-danger">Cerrar Sesión</button></li>

@@ -44,7 +44,7 @@ const DashboardAdmin: React.FC = () => {
             <i className="fas fa-crown" style={{ color: '#ffd700' }}></i>
             Admin Panel
           </h2>
-          <p className="text-muted small">Bienvenido, {user.nombreCompleto}</p>
+          <p className="text-muted small">Bienvenido, {user.nombre} {user.apellido}</p>
         </div>
 
         <nav className="sidebar-nav">

@@ -19,6 +19,7 @@ import AdminRoute from './components/AdminRoute';
 import DashboardAdmin from './components/admin/DashboardAdmin';
 import ReservarExperiencia from './pages/ReservarExperiencia';
 import MisReservas from './pages/MisReservas';
+import PerfilUsuario from './pages/PerfilUsuario';
 
 import './assets/css/style.css';
 
@@ -82,6 +83,16 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MisReservas />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Profile - Protected Route */}
+              <Route
+                path="/perfil"
+                element={
+                  <ProtectedRoute>
+                    <PerfilUsuario />
                   </ProtectedRoute>
                 }
               />
