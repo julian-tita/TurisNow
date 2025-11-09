@@ -1,7 +1,7 @@
 // filepath: frontend-vite/src/components/profile/ProfileSidebar.tsx
 import React from 'react';
 
-type Tab = 'datos' | 'reservas';
+type Tab = 'datos' | 'reservas' | 'favoritos';
 
 interface ProfileSidebarProps {
   activeTab: Tab;
@@ -19,6 +19,11 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ activeTab, onChange }) 
       key: 'reservas' as Tab,
       label: 'Mis Reservas',
       icon: '📋'
+    },
+    {
+      key: 'favoritos' as Tab,
+      label: 'Favoritos',
+      icon: '❤️'
     }
   ];
 

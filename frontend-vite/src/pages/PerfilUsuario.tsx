@@ -1,19 +1,21 @@
 // filepath: frontend-vite/src/pages/PerfilUsuario.tsx
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useAuth } from '../contexts/AuthContext';
 import userService from '../services/userService';
 import type { UserDTO, UpdateUserRequest } from '../services/userService';
 import ProfileSidebar from '../components/profile/ProfileSidebar';
 import ProfileDataForm from '../components/profile/ProfileDataForm';
+import ProfileReservas from '../components/profile/ProfileReservas';
+import ProfileFavoritos from '../components/profile/ProfileFavoritos';
 
-type Tab = 'datos' | 'reservas';
+type Tab = 'datos' | 'reservas' | 'favoritos';
 
 const PerfilUsuario: React.FC = () => {
+  const { user: authUser, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('datos');
   const [user, setUser] = useState<UserDTO | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -44,12 +46,22 @@ const PerfilUsuario: React.FC = () => {
     }
   };
 
-  // Navigate to reservations when tab changes
-  useEffect(() => {
-    if (activeTab === 'reservas') {
-      navigate('/mis-reservas');
-    }
-  }, [activeTab, navigate]);
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/';
+  };
+
+  const getInitials = (nombre?: string, apellido?: string) => {
+    if (!nombre || !apellido) return 'U';
+    return `${nombre.charAt(0)}${apellido.charAt(0)}`.toUpperCase();
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Buenos días';
+    if (hour < 18) return 'Buenas tardes';
+    return 'Buenas noches';
+  };
 
   const renderSkeleton = () => (
     <div className="card shadow-sm p-4">
@@ -109,6 +121,50 @@ const PerfilUsuario: React.FC = () => {
   return (
     <div className="container-fluid" style={{ paddingTop: '120px', minHeight: '100vh' }}>
       <div className="container">
+        {/* Hero Card */}
+        {!loading && user && (
+          <div className="card shadow-sm border-0 rounded-4 mb-4">
+            <div className="card-body p-4 p-lg-5">
+              <div className="row align-items-center">
+                <div className="col-lg-8">
+                  <h2 className="text-primary mb-3">
+                    <i className="fa fa-map-marker-alt me-2"></i>
+                    {getGreeting()}, {user.nombre}!
+                  </h2>
+                  <p className="text-muted lead mb-3">¿Listo para tu próxima aventura?</p>
+                  <div className="d-flex flex-column flex-sm-row gap-2">
+                    <span className="badge bg-light text-dark px-3 py-2">
+                      <i className="fas fa-envelope me-2"></i>
+                      {authUser?.email}
+                    </span>
+                    <span className="badge bg-primary px-3 py-2">
+                      <i className="fas fa-user me-2"></i>
+                      {authUser?.rol === 'ADMIN' ? 'Administrador' : 'Usuario'}
+                    </span>
+                  </div>
+                </div>
+                <div className="col-lg-4 text-center mt-3 mt-lg-0">
+                  <div className="d-flex align-items-center justify-content-center gap-3">
+                    <div 
+                      className="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                      style={{ width: '60px', height: '60px', fontSize: '1.5rem' }}
+                    >
+                      {getInitials(user.nombre, user.apellido)}
+                    </div>
+                    <button 
+                      className="btn btn-outline-danger"
+                      onClick={handleLogout}
+                    >
+                      <i className="fas fa-sign-out-alt me-2"></i>
+                      Cerrar Sesión
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="row">
           {/* Sidebar */}
           <div className="col-12 col-lg-3 mb-4">
@@ -120,9 +176,13 @@ const PerfilUsuario: React.FC = () => {
             {loading ? (
               renderSkeleton()
             ) : user ? (
-              activeTab === 'datos' ? (
-                <ProfileDataForm user={user} onSubmit={handleUpdateProfile} />
-              ) : null
+              <>
+                {activeTab === 'datos' && (
+                  <ProfileDataForm user={user} onSubmit={handleUpdateProfile} />
+                )}
+                {activeTab === 'reservas' && <ProfileReservas />}
+                {activeTab === 'favoritos' && <ProfileFavoritos />}
+              </>
             ) : (
               <div className="card shadow-sm p-4 text-center">
                 <div className="text-muted">

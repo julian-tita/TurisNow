@@ -71,10 +71,10 @@ const Login: React.FC = () => {
           if (userData.rol === 'ADMIN') {
             navigate('/admin/dashboard');
           } else {
-            navigate('/dashboard');
+            navigate('/'); // Redirigir al home en lugar de dashboard
           }
         } else {
-          navigate('/dashboard');
+          navigate('/'); // Redirigir al home en lugar de dashboard
         }
       } else {
         setError(authError || 'Credenciales inválidas. Verifica tu correo y contraseña');

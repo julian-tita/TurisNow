@@ -32,7 +32,7 @@ const DashboardAdmin: React.FC = () => {
 
   // Verificar que el usuario sea admin
   if (!user || user.rol !== 'ADMIN') {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (

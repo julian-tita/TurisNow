@@ -13,7 +13,6 @@ import LikePage from './pages/LikePage';
 import CartPage from './pages/CartPage';
 import Login from './components/Login';
 import Register from './components/Register';
-import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import DashboardAdmin from './components/admin/DashboardAdmin';
@@ -102,16 +101,6 @@ function App() {
               <Route path="/cart" element={<CartPage />} />            {/* Auth */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-
-            {/* Protegida - Usuario normal */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
 
             {/* Protegida - Admin */}
             <Route

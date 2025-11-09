@@ -19,9 +19,9 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Si no es admin, redirigir al dashboard normal
+  // Si no es admin, redirigir al home
   if (user.rol !== 'ADMIN') {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // Si es admin, mostrar el contenido
