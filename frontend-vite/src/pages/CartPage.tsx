@@ -1,45 +1,78 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCarrito } from '../hooks/useCarrito';
+import SkeletonCard from '../components/common/SkeletonCard';
 
 const CartPage: React.FC = () => {
-  const { items, totals, remove, setCantidad, setFecha, clear } = useCart();
+  const navigate = useNavigate();
+  const { 
+    items, 
+    loading, 
+    total, 
+    cantidadTotal,
+    eliminarItem, 
+    actualizarCantidad, 
+    vaciarCarrito, 
+    procesarCheckout,
+    formatearPrecio,
+    estaVacio
+  } = useCarrito();
 
-  const handleRemoveItem = (id: number) => {
+  const handleRemoveItem = (itemId: number, titulo: string) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este elemento del carrito?')) {
-      remove(id);
+      eliminarItem(itemId, titulo);
     }
   };
 
   const handleClearCart = () => {
     if (window.confirm('¿Estás seguro de que deseas vaciar todo el carrito?')) {
-      clear();
+      vaciarCarrito();
     }
   };
 
-  const handleQuantityChange = (id: number, cantidad: number) => {
+  const handleQuantityChange = (itemId: number, cantidad: number) => {
     if (cantidad >= 1) {
-      setCantidad(id, cantidad);
+      actualizarCantidad(itemId, cantidad);
     }
   };
 
-  const handleDateChange = (id: number, fecha: string) => {
-    setFecha(id, fecha);
+  const handleCheckout = async () => {
+    const response = await procesarCheckout();
+    if (response && response.success) {
+      // Redirigir a mis reservas después de checkout exitoso
+      navigate('/mis-reservas');
+    }
   };
 
   const formatPrice = (precio: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      minimumFractionDigits: 0
-    }).format(precio);
+    return formatearPrecio(precio);
   };
 
-  const getTomorrowDate = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
-  };
+  if (loading) {
+    return (
+      <div className="container-fluid py-5" style={{ paddingTop: '120px' }}>
+        <div className="container">
+          <div className="row">
+            <div className="col-12">
+              <div className="text-center mb-5">
+                <h1 className="display-5 mb-3">
+                  <i className="fa fa-shopping-cart text-primary me-3"></i>
+                  Mi Carrito
+                </h1>
+              </div>
+              <div className="row g-4">
+                {[1, 2].map((i) => (
+                  <div key={i} className="col-12">
+                    <SkeletonCard variant="experienciaDetail" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container-fluid py-5" style={{ paddingTop: '120px' }}>
@@ -91,7 +124,7 @@ const CartPage: React.FC = () => {
                               <img 
                                 src={item.imagenUrl} 
                                 className="img-fluid rounded-start h-100" 
-                                alt={item.titulo}
+                                alt={item.tituloExperiencia}
                                 style={{ objectFit: 'cover', minHeight: '150px' }}
                               />
                             ) : (
@@ -106,9 +139,17 @@ const CartPage: React.FC = () => {
                           <div className="col-md-9">
                             <div className="card-body">
                               <div className="d-flex justify-content-between align-items-start mb-3">
-                                <h6 className="card-title mb-0">{item.titulo}</h6>
+                                <div>
+                                  <h6 className="card-title mb-1">{item.tituloExperiencia}</h6>
+                                  {item.ciudadExperiencia && (
+                                    <small className="text-muted">
+                                      <i className="fa fa-map-marker me-1"></i>
+                                      {item.ciudadExperiencia}
+                                    </small>
+                                  )}
+                                </div>
                                 <button
-                                  onClick={() => handleRemoveItem(item.id)}
+                                  onClick={() => handleRemoveItem(item.id, item.tituloExperiencia)}
                                   className="tn-icon-button"
                                   aria-label="Eliminar del carrito"
                                   title="Eliminar del carrito"
@@ -120,13 +161,14 @@ const CartPage: React.FC = () => {
                               <div className="row g-3">
                                 <div className="col-md-4">
                                   <label className="form-label small">Fecha de salida</label>
-                                  <input
-                                    type="date"
-                                    className="form-control form-control-sm"
-                                    value={item.fechaSalida || ''}
-                                    min={getTomorrowDate()}
-                                    onChange={(e) => handleDateChange(item.id, e.target.value)}
-                                  />
+                                  <div className="form-control form-control-sm bg-light">
+                                    {new Date(item.fechaSalida).toLocaleDateString('es-AR')}
+                                  </div>
+                                  {item.duracionDias && (
+                                    <small className="text-muted">
+                                      Duración: {item.duracionDias} día{item.duracionDias > 1 ? 's' : ''}
+                                    </small>
+                                  )}
                                 </div>
                                 
                                 <div className="col-md-4">
@@ -158,10 +200,13 @@ const CartPage: React.FC = () => {
                                 </div>
                                 
                                 <div className="col-md-4">
-                                  <label className="form-label small">Precio total</label>
+                                  <label className="form-label small">Subtotal</label>
                                   <div className="h6 text-primary">
-                                    {formatPrice(item.precio * item.cantidad)}
+                                    {formatPrice(item.subtotal)}
                                   </div>
+                                  <small className="text-muted">
+                                    {formatPrice(item.precioUnitario)} x {item.cantidad}
+                                  </small>
                                 </div>
                               </div>
                             </div>
@@ -180,32 +225,30 @@ const CartPage: React.FC = () => {
                       </div>
                       <div className="card-body">
                         <div className="d-flex justify-content-between mb-2">
-                          <span>Subtotal:</span>
-                          <span>{formatPrice(totals.subtotal)}</span>
+                          <span>Total:</span>
+                          <span className="fw-bold">{formatPrice(total)}</span>
                         </div>
-                        <div className="d-flex justify-content-between mb-2">
-                          <span>Impuestos (21%):</span>
-                          <span>{formatPrice(totals.impuestos)}</span>
-                        </div>
-                        <div className="d-flex justify-content-between mb-2">
-                          <span>Envío:</span>
-                          <span className="text-success">
-                            {totals.envio === 0 ? 'Gratis' : formatPrice(totals.envio)}
-                          </span>
+                        <div className="d-flex justify-content-between mb-2 text-muted">
+                          <small>Items en el carrito:</small>
+                          <small>{cantidadTotal} persona{cantidadTotal !== 1 ? 's' : ''}</small>
                         </div>
                         <hr />
-                        <div className="d-flex justify-content-between h5">
-                          <span>Total:</span>
-                          <span className="text-primary">{formatPrice(totals.total)}</span>
+                        <div className="d-flex justify-content-between h5 mb-4">
+                          <span>Total a pagar:</span>
+                          <span className="text-primary">{formatPrice(total)}</span>
                         </div>
                         
                         <div className="d-grid gap-2 mt-4">
-                          <button className="btn btn-primary btn-lg">
-                            <i className="fa fa-credit-card me-2"></i>
-                            Continuar al checkout
+                          <button 
+                            className="btn btn-primary btn-lg"
+                            onClick={handleCheckout}
+                            disabled={estaVacio}
+                          >
+                            <i className="fa fa-check me-2"></i>
+                            Confirmar Reservas
                           </button>
                           <Link to="/experiencias" className="btn btn-outline-secondary">
-                            Seguir comprando
+                            Seguir explorando
                           </Link>
                         </div>
                         

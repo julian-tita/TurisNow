@@ -3,8 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import experienciaService from '../../services/experienciaService';
 import type { ExperienciaDetalleDTO } from '../../types/experiencia.types';
-import { useCart } from '../../contexts/CartContext';
-import { useLikes } from '../../contexts/LikeContext';
+import { useCarrito } from '../../hooks/useCarrito';
+import { useFavoritos } from '../../hooks/useFavoritos';
 import SkeletonCard from '../common/SkeletonCard';
 import CalendarioDisponibilidad from '../common/CalendarioDisponibilidad';
 
@@ -17,13 +17,14 @@ const ExperienciaDetail: React.FC = () => {
   const [selectedSalida, setSelectedSalida] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [vistaCalendario, setVistaCalendario] = useState(false);
+  const [cantidad, setCantidad] = useState(1);
   
-  // Cart and Likes functionality
-  const { add } = useCart();
-  const { has, toggle } = useLikes();
+  // Cart and Favorites functionality
+  const { agregarItem } = useCarrito();
+  const { isFavorito, toggleFavorito } = useFavoritos();
 
   // Handler functions
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!experiencia) return;
     
     if (!selectedSalida) {
@@ -31,33 +32,16 @@ const ExperienciaDetail: React.FC = () => {
       return;
     }
     
-    const selectedSalidaData = experiencia.salidas.find(s => s.id === selectedSalida);
-    
-    const cartItem = {
-      id: experiencia.id,
-      titulo: experiencia.titulo,
-      precio: experiencia.precio,
-      imagenUrl: experiencia.imagenUrl,
-      cantidad: 1,
-      fechaSalida: selectedSalidaData?.fechaInicio
-    };
-    
-    add(cartItem);
-    toast.success('Experiencia añadida al carrito');
+    await agregarItem({
+      experienciaId: experiencia.id,
+      salidaId: selectedSalida,
+      cantidad: cantidad
+    }, experiencia.titulo);
   };
 
   const handleToggleFavorite = () => {
     if (!experiencia) return;
-    
-    const likeItem = {
-      id: experiencia.id,
-      titulo: experiencia.titulo,
-      precio: experiencia.precio,
-      imagenUrl: experiencia.imagenUrl,
-      categoria: experiencia.categoria
-    };
-    
-    toggle(likeItem);
+    toggleFavorito(experiencia.id, experiencia.titulo);
   };
 
   // Handler para la selección de fecha en el calendario
@@ -69,7 +53,7 @@ const ExperienciaDetail: React.FC = () => {
     }
   };
 
-  const isLiked = experiencia ? has(experiencia.id) : false;
+  const isLiked = experiencia ? isFavorito(experiencia.id) : false;
 
   useEffect(() => {
     if (id) {
@@ -409,6 +393,49 @@ const ExperienciaDetail: React.FC = () => {
                       </p>
                     )}
                   </div>
+
+                  {/* Selector de cantidad */}
+                  {selectedSalida && (
+                    <div className="quantity-selector mb-3">
+                      <label className="form-label small fw-bold">Cantidad de personas</label>
+                      <div className="input-group">
+                        <button
+                          className="btn btn-outline-secondary"
+                          type="button"
+                          onClick={() => setCantidad(Math.max(1, cantidad - 1))}
+                          disabled={cantidad <= 1}
+                        >
+                          <i className="fa fa-minus"></i>
+                        </button>
+                        <input
+                          type="number"
+                          className="form-control text-center"
+                          value={cantidad}
+                          min="1"
+                          max={experiencia.salidas.find(s => s.id === selectedSalida)?.capacidadDisponible || 1}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 1;
+                            const maxCap = experiencia.salidas.find(s => s.id === selectedSalida)?.capacidadDisponible || 1;
+                            setCantidad(Math.min(Math.max(1, val), maxCap));
+                          }}
+                        />
+                        <button
+                          className="btn btn-outline-secondary"
+                          type="button"
+                          onClick={() => {
+                            const maxCap = experiencia.salidas.find(s => s.id === selectedSalida)?.capacidadDisponible || 1;
+                            setCantidad(Math.min(cantidad + 1, maxCap));
+                          }}
+                          disabled={cantidad >= (experiencia.salidas.find(s => s.id === selectedSalida)?.capacidadDisponible || 1)}
+                        >
+                          <i className="fa fa-plus"></i>
+                        </button>
+                      </div>
+                      <small className="text-muted">
+                        Total: {formatPrice(experiencia.precio * cantidad, experiencia.moneda)}
+                      </small>
+                    </div>
+                  )}
 
                   <div className="booking-actions">
                     <button 

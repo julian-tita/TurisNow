@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLikes } from '../../contexts/LikeContext';
-import { useCart } from '../../contexts/CartContext';
+import { useFavoritos } from '../../hooks/useFavoritos';
+import { useCarrito } from '../../hooks/useCarrito';
 
 const Header = () => {
   const { user, logout } = useAuth();
-  const { count: likesCount } = useLikes();
-  const { items: cartItems } = useCart();
+  const { cantidadFavoritos } = useFavoritos();
+  const { cantidadTotal } = useCarrito();
   const navigate = useNavigate();
   const [isSticky, setIsSticky] = useState(false);
-  
-  const cartItemCount = cartItems.reduce((total, item) => total + item.cantidad, 0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -84,18 +82,18 @@ const Header = () => {
               {/* Favoritos */}
               <Link to="/likes" className="btn btn-icon me-2 position-relative" aria-label="Favoritos">
                 <i className="fa fa-heart"></i>
-                {likesCount > 0 && (
+                {cantidadFavoritos > 0 && (
                   <span className="tn-badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle">
-                    {likesCount}
+                    {cantidadFavoritos}
                   </span>
                 )}
               </Link>
               {/* Carrito */}
               <Link to="/cart" className="btn btn-icon me-3 position-relative" aria-label="Carrito de compras">
                 <i className="fa fa-shopping-cart"></i>
-                {cartItemCount > 0 && (
+                {cantidadTotal > 0 && (
                   <span className="tn-badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle">
-                    {cartItemCount}
+                    {cantidadTotal}
                   </span>
                 )}
               </Link>

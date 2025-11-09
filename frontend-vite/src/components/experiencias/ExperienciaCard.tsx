@@ -1,8 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import type { ExperienciaListadoDTO } from '../../types/experiencia.types';
-import { useLikes } from '../../contexts/LikeContext';
-import { useCart } from '../../contexts/CartContext';
+import { useFavoritos } from '../../hooks/useFavoritos';
 
 interface ExperienciaCardProps {
   experiencia: ExperienciaListadoDTO;
@@ -15,10 +14,9 @@ const ExperienciaCard: React.FC<ExperienciaCardProps> = ({
   className = '',
   showFullDescription = false
 }) => {
-  const { toggle: toggleLike, has: isLiked } = useLikes();
-  const { add: addToCart } = useCart();
+  const { isFavorito, toggleFavorito } = useFavoritos();
   
-  const isLikedState = isLiked(experiencia.id);
+  const isLikedState = isFavorito(experiencia.id);
   const categorias: { [key: string]: string } = {
     'PLAYA': '🏖️ Playa',
     'MONTANA': '🏔️ Montaña',
@@ -54,25 +52,16 @@ const ExperienciaCard: React.FC<ExperienciaCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
-    toggleLike({
-      id: experiencia.id,
-      titulo: experiencia.titulo,
-      precio: experiencia.precio,
-      imagenUrl: experiencia.imagenUrl,
-      categoria: experiencia.categoria
-    });
+    toggleFavorito(experiencia.id, experiencia.titulo);
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    addToCart({
-      id: experiencia.id,
-      titulo: experiencia.titulo,
-      precio: experiencia.precio,
-      imagenUrl: experiencia.imagenUrl
-    }, 1);
+    // Nota: El carrito requiere salidaId, por lo que redirigimos al detalle
+    // para que el usuario seleccione una fecha específica
+    alert('Por favor selecciona una fecha de salida desde el detalle de la experiencia');
   };
 
   return (
