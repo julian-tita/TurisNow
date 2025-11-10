@@ -6,8 +6,10 @@ import type {
   ExperienciasResponse,
   ExperienciaFilters,
   ExperienciaRequest,
-  PageResponse
+  PageResponse,
+  Categoria
 } from '../types/experiencia.types';
+import { normalizeCategoria } from '../types/experiencia.types';
 
 // Base URL del backend
 // Usar proxy de Vite en desarrollo (/api se redirige a http://localhost:9090/api)
@@ -18,6 +20,23 @@ const EXPERIENCIAS_ENDPOINT = `${API_BASE_URL}/api/experiencias`;
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+// Helper para normalizar categorías en las respuestas de la API
+const normalizeExperiencia = (exp: any): ExperienciaListadoDTO => {
+  const categoriaNormalizada = normalizeCategoria(exp.categoria);
+  return {
+    ...exp,
+    categoria: categoriaNormalizada || exp.categoria
+  };
+};
+
+const normalizeExperienciaDetalle = (exp: any): ExperienciaDetalleDTO => {
+  const categoriaNormalizada = normalizeCategoria(exp.categoria);
+  return {
+    ...exp,
+    categoria: categoriaNormalizada || exp.categoria
+  };
 };
 
 // Helper para construir query parameters
@@ -49,8 +68,14 @@ export const experienciaService = {
       
       const response: AxiosResponse<ExperienciasResponse> = await axios.get(url);
       
-      console.log('✅ Experiencias fetched successfully:', response.data);
-      return response.data;
+      // Normalizar categorías en todas las experiencias
+      const normalizedData = {
+        ...response.data,
+        content: response.data.content.map(normalizeExperiencia)
+      };
+      
+      console.log('✅ Experiencias fetched successfully:', normalizedData);
+      return normalizedData;
     } catch (error) {
       console.error('❌ Error fetching experiencias:', error);
       throw error;
@@ -70,8 +95,10 @@ export const experienciaService = {
         `${EXPERIENCIAS_ENDPOINT}/${id}`
       );
       
-      console.log('✅ Experiencia detail fetched successfully:', response.data);
-      return response.data;
+      const normalizedData = normalizeExperienciaDetalle(response.data);
+      
+      console.log('✅ Experiencia detail fetched successfully:', normalizedData);
+      return normalizedData;
     } catch (error) {
       console.error(`❌ Error fetching experiencia ${id}:`, error);
       throw error;
@@ -244,6 +271,120 @@ export const experienciaService = {
     } catch (error) {
       console.error('❌ Backend connection failed:', error);
       return false;
+    }
+  },
+
+  /**
+   * GET /api/experiencias/destacadas - Obtener experiencias destacadas
+   * @param size - Cantidad de experiencias (default: 4)
+   * @returns Promise con array de experiencias destacadas
+   */
+  async getExperienciasDestacadas(size = 4): Promise<ExperienciaListadoDTO[]> {
+    try {
+      console.log(`🔍 Fetching ${size} destacadas...`);
+      
+      const response: AxiosResponse<ExperienciaListadoDTO[]> = await axios.get(
+        `${EXPERIENCIAS_ENDPOINT}/destacadas`,
+        { 
+          params: { size },
+          headers: {} // Endpoint público - no enviar Authorization
+        }
+      );
+      
+      console.log('✅ Destacadas fetched:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error fetching destacadas:', error);
+      // Fallback: obtener primeras experiencias de la lista general
+      const { content } = await this.getAllExperiencias({ size, page: 0 });
+      return content;
+    }
+  },
+
+  /**
+   * GET /api/experiencias/categorias - Obtener categorías disponibles
+   * Si el endpoint no existe, deriva las categorías de todas las experiencias
+   * @returns Promise con array de categorías
+   */
+  async getCategorias(): Promise<Categoria[]> {
+    try {
+      console.log('🔍 Fetching categorias...');
+      
+      // Intentar obtener categorías del endpoint específico (público - sin auth)
+      try {
+        const response: AxiosResponse<Categoria[]> = await axios.get(
+          `${EXPERIENCIAS_ENDPOINT}/categorias`,
+          { headers: {} } // Endpoint público - no enviar Authorization
+        );
+        console.log('✅ Categorias fetched from endpoint:', response.data);
+        return response.data;
+      } catch (endpointError) {
+        // Si no existe el endpoint, derivar de todas las experiencias
+        console.log('ℹ️ Endpoint /categorias no disponible, derivando de experiencias...');
+        const { content } = await this.getAllExperiencias({ size: 1000 });
+        const categoriasSet = new Set<Categoria>(content.map(exp => exp.categoria));
+        const categorias = Array.from(categoriasSet);
+        console.log('✅ Categorias derivadas:', categorias);
+        return categorias;
+      }
+    } catch (error) {
+      console.error('❌ Error fetching categorias:', error);
+      // Retornar categorías por defecto en caso de error
+      return ['PLAYA', 'MONTANA', 'AVENTURA', 'GASTRONOMIA', 'CULTURA'];
+    }
+  },
+
+  /**
+   * GET /api/experiencias/categorias/conteo - Obtener conteo por categoría
+   * Si el endpoint no existe, cuenta manualmente desde todas las experiencias
+   * @returns Promise con array de {categoria, cantidad}
+   */
+  async getCategoriasConConteo(): Promise<Array<{ categoria: Categoria; cantidad: number }>> {
+    try {
+      console.log('🔍 Fetching categorias con conteo...');
+      
+      // Intentar obtener conteo del endpoint específico (público - sin auth)
+      try {
+        const response: AxiosResponse<Array<{ categoria: string; cantidad: number }>> = await axios.get(
+          `${EXPERIENCIAS_ENDPOINT}/categorias/conteo`,
+          { headers: {} } // Endpoint público - no enviar Authorization
+        );
+        
+        // Convertir strings del backend a tipo Categoria
+        const resultado = response.data.map(item => ({
+          categoria: item.categoria as Categoria,
+          cantidad: item.cantidad
+        }));
+        
+        console.log('✅ Categorias con conteo fetched from endpoint:', resultado);
+        return resultado;
+      } catch (endpointError) {
+        // Si no existe el endpoint, contar manualmente
+        console.log('ℹ️ Endpoint /categorias/conteo no disponible, contando manualmente...');
+        
+        const { content } = await this.getAllExperiencias({ size: 1000 });
+        const conteo = new Map<Categoria, number>();
+        
+        content.forEach(exp => {
+          // Normalizar categoría de la BD (minúsculas con tildes) a TypeScript (MAYÚSCULAS sin tildes)
+          const categoriaNormalizada = normalizeCategoria(exp.categoria);
+          if (categoriaNormalizada) {
+            conteo.set(categoriaNormalizada, (conteo.get(categoriaNormalizada) || 0) + 1);
+          }
+        });
+        
+        const resultado = Array.from(conteo.entries()).map(([categoria, cantidad]) => ({
+          categoria,
+          cantidad
+        }));
+        
+        console.log('✅ Categorias con conteo calculadas:', resultado);
+        return resultado;
+      }
+    } catch (error) {
+      console.error('❌ Error fetching categorias con conteo:', error);
+      // Retornar array vacío en caso de error
+      return [];
     }
   }
 };

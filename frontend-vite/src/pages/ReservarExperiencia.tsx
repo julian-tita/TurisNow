@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import experienciaService from '../services/experienciaService';
 import reservaService from '../services/reservaService';
+import userService from '../services/userService';
+import ReservaConfirmacion from '../components/reservas/ReservaConfirmacion';
 import type { ExperienciaDetalleDTO } from '../types/experiencia.types';
 import type { ReservaRequest } from '../services/reservaService';
 
@@ -64,8 +66,27 @@ const ReservarExperiencia: React.FC = () => {
 
     if (experienciaId && salidaId) {
       loadExperienciaData();
+      loadUserData();
     }
   }, [experienciaId, salidaId, user, navigate]);
+
+  const loadUserData = async () => {
+    try {
+      const userData = await userService.getMe();
+      
+      // Actualizar los datos del formulario con la información del usuario
+      setReservaData(prev => ({
+        ...prev,
+        nombre: userData.nombreCompleto || `${userData.nombre} ${userData.apellido}`,
+        email: userData.email,
+        telefono: userData.telefono || '',
+        documentoIdentidad: userData.documento || ''
+      }));
+    } catch (err: any) {
+      console.error('Error al cargar datos del usuario:', err);
+      // No mostrar error toast, solo log - los campos quedarán vacíos para que el usuario los complete
+    }
+  };
 
   const loadExperienciaData = async () => {
     try {
@@ -433,6 +454,11 @@ const ReservarExperiencia: React.FC = () => {
                     Datos de contacto
                   </h5>
 
+                  <div className="alert alert-success mb-4">
+                    <i className="fas fa-check-circle me-2"></i>
+                    <strong>Datos cargados desde tu perfil.</strong> Puedes revisarlos y editarlos si es necesario.
+                  </div>
+
                   <div className="row g-3">
                     <div className="col-md-6">
                       <label className="form-label fw-medium">
@@ -485,6 +511,10 @@ const ReservarExperiencia: React.FC = () => {
                         }))}
                         placeholder="+54 9 11 1234-5678"
                       />
+                      <small className="text-muted">
+                        <i className="fas fa-info-circle me-1"></i>
+                        Cargado desde tu perfil - puedes editarlo
+                      </small>
                     </div>
 
                     <div className="col-md-6">
@@ -502,6 +532,10 @@ const ReservarExperiencia: React.FC = () => {
                         }))}
                         placeholder="DNI, Pasaporte, etc."
                       />
+                      <small className="text-muted">
+                        <i className="fas fa-info-circle me-1"></i>
+                        Cargado desde tu perfil - puedes editarlo
+                      </small>
                     </div>
                   </div>
 
@@ -804,10 +838,30 @@ const ReservarExperiencia: React.FC = () => {
                           <p className="text-muted">Estamos validando tu pago y creando tu reserva...</p>
                         </div>
                       ) : reservaCreada ? (
-                        <div>
-                          <i className="fas fa-check-circle text-success mb-3" style={{ fontSize: '4rem' }}></i>
-                          <h4 className="text-success mb-3">¡Reserva creada exitosamente!</h4>
-                        </div>
+                        // Componente de confirmación profesional
+                        <ReservaConfirmacion
+                          data={{
+                            id: reservaCreada.id,
+                            estado: reservaCreada.estado,
+                            total: precioTotal,
+                            moneda: experiencia?.moneda || 'ARS',
+                            fechaReserva: new Date().toISOString(),
+                            metodoPago: pagoData.metodoPago === 'tarjeta' 
+                              ? `Tarjeta ****${pagoData.numeroTarjeta.slice(-4)}`
+                              : pagoData.metodoPago === 'transferencia' 
+                              ? 'Transferencia Bancaria'
+                              : 'Pago en Efectivo',
+                            experienciaTitulo: experiencia?.titulo,
+                            fechaInicio: salidaSeleccionada?.fechaInicio,
+                            fechaFin: salidaSeleccionada?.fechaFin,
+                            cantidadPersonas: reservaData.cantidadPersonas,
+                            emailUsuario: reservaData.email
+                          }}
+                          onDescargarComprobante={() => {
+                            // TODO: Implementar descarga de comprobante
+                            toast.success('Función de descarga disponible próximamente');
+                          }}
+                        />
                       ) : paymentError && (
                         <div>
                           <i className="fas fa-exclamation-triangle text-danger mb-3" style={{ fontSize: '4rem' }}></i>
@@ -815,86 +869,6 @@ const ReservarExperiencia: React.FC = () => {
                         </div>
                       )}
                     </div>
-
-                    {/* Resultado exitoso */}
-                    {reservaCreada && (
-                      <div className="row justify-content-center">
-                        <div className="col-md-8">
-                          <div className="alert alert-success">
-                            <h5 className="alert-heading">
-                              <i className="fas fa-thumbs-up me-2"></i>
-                              ¡Tu reserva ha sido confirmada!
-                            </h5>
-                            <hr />
-                            <div className="row text-start">
-                              <div className="col-md-6">
-                                <p className="mb-2">
-                                  <strong>Número de reserva:</strong> 
-                                  <br />
-                                  <span className="h6 text-primary">#{reservaCreada.id}</span>
-                                </p>
-                                <p className="mb-2">
-                                  <strong>Estado:</strong> 
-                                  <span className="badge bg-success ms-2">{reservaCreada.estado}</span>
-                                </p>
-                                <p className="mb-2">
-                                  <strong>Método de pago:</strong> 
-                                  <br />
-                                  {pagoData.metodoPago === 'tarjeta' && `Tarjeta ****${pagoData.numeroTarjeta.slice(-4)}`}
-                                  {pagoData.metodoPago === 'transferencia' && 'Transferencia Bancaria'}
-                                  {pagoData.metodoPago === 'efectivo' && 'Pago en Efectivo'}
-                                </p>
-                              </div>
-                              <div className="col-md-6">
-                                <p className="mb-2">
-                                  <strong>Total pagado:</strong> 
-                                  <br />
-                                  <span className="h6 text-success">{formatPrice(precioTotal)}</span>
-                                </p>
-                                <p className="mb-2">
-                                  <strong>Fecha de reserva:</strong> 
-                                  <br />
-                                  {new Date().toLocaleDateString('es-AR')}
-                                </p>
-                                {pagoData.metodoPago === 'tarjeta' && pagoData.cuotas > 1 && (
-                                  <p className="mb-2">
-                                    <strong>Cuotas:</strong> 
-                                    <br />
-                                    {pagoData.cuotas} cuotas de {formatPrice(precioTotal / pagoData.cuotas)}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <hr />
-                            <p className="mb-3">
-                              <i className="fas fa-envelope me-2"></i>
-                              Recibirás un email con los detalles de tu reserva en los próximos minutos.
-                            </p>
-                            <div className="d-flex gap-2 justify-content-center">
-                              <button 
-                                className="btn btn-primary"
-                                onClick={() => navigate('/mis-reservas', {
-                                  state: {
-                                    message: '¡Reserva creada exitosamente!',
-                                    reservaId: reservaCreada.id
-                                  }
-                                })}
-                              >
-                                <i className="fas fa-list me-2"></i>
-                                Ver mis reservas
-                              </button>
-                              <button 
-                                className="btn btn-outline-primary"
-                                onClick={() => navigate('/')}
-                              >
-                                <i className="fas fa-home me-2"></i>
-                                Volver al inicio
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Error en el procesamiento */}
                     {paymentError && (

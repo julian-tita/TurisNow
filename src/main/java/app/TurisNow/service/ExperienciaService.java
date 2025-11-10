@@ -18,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -260,6 +262,35 @@ public class ExperienciaService {
             case "EUR" -> Experiencia.Moneda.EUR;
             default -> throw new IllegalArgumentException("Moneda no válida: " + moneda);
         };
+    }
+    
+    /**
+     * Obtener todas las categorías únicas disponibles
+     * @return Lista de strings con los valores de las categorías
+     */
+    public List<String> obtenerCategorias() {
+        List<Categoria> categorias = experienciaRepository.findDistinctCategorias();
+        return categorias.stream()
+            .map(Categoria::getValor)
+            .collect(Collectors.toList());
+    }
+    
+    /**
+     * Obtener categorías con conteo de experiencias
+     * @return Lista de objetos con categoria y cantidad
+     */
+    public List<Map<String, Object>> obtenerCategoriasConConteo() {
+        List<Object[]> results = experienciaRepository.findCategoriasConConteo();
+        return results.stream()
+            .map(result -> {
+                Map<String, Object> map = new HashMap<>();
+                Categoria categoria = (Categoria) result[0];
+                Long cantidad = (Long) result[1];
+                map.put("categoria", categoria.getValor());
+                map.put("cantidad", cantidad);
+                return map;
+            })
+            .collect(Collectors.toList());
     }
 }
 

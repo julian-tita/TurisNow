@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Hero from "../components/landing/Hero";
 import CategoryStrip from "../components/landing/CategoryStrip";
 import HowItWorks from "../components/landing/HowItWorks";
 import TrustBenefits from "../components/landing/TrustBenefits";
-import { getExperiences } from "../data/experiences";
-import type { Experience, Departure } from "../types/experiencia.types";
+import { experienciaService } from "../services/experienciaService";
+import type { ExperienciaListadoDTO } from "../types/experiencia.types";
 import { Link } from 'react-router-dom';
 
 // Helpers locales
@@ -16,29 +16,11 @@ const formatPrice = (amount: number, currency: string) => {
   }
 };
 
-const pickCheapest = (exps: Experience[], n = 8): Experience[] => {
+const pickFeatured = (exps: ExperienciaListadoDTO[], n = 4): ExperienciaListadoDTO[] => {
   if (!exps.length) return [];
-  // Ordenar por precio ascendente y tomar primeros n (podría hacerse aleatorio)
-  return [...exps].sort((a, b) => a.precio - b.precio).slice(0, n);
-};
-
-const pickFeatured = (exps: Experience[], n = 4): Experience[] => {
-  if (!exps.length) return [];
-  // Por ahora, tomamos las primeras n experiencias
-  // En una implementación real, esto vendría marcado desde el backend
+  // Tomar las primeras n experiencias de la respuesta
+  // En una implementación futura, el backend podría tener un flag "destacada"
   return exps.slice(0, n);
-};
-
-interface UpcomingItem {
-  departure: Departure;
-  experience: Experience;
-}
-
-const pickUpcomingDepartures = (exps: Experience[], n = 6): UpcomingItem[] => {
-  // Nota: ExperienciaListadoDTO no incluye salidas detalladas, solo proximasSalidas
-  // En una implementación real, necesitaríamos hacer una llamada separada al API
-  // para obtener las salidas próximas o usar ExperienciaDetalleDTO
-  return [];
 };
 
 // Componente Newsletter mantenido aquí por simplicidad
@@ -71,17 +53,38 @@ const SkeletonCard = () => (
 );
 
 export default function Home() {
-  const [items, setItems] = useState<Experience[]>([]);
+  const [items, setItems] = useState<ExperienciaListadoDTO[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
-    getExperiences(400).then(data => { if (active) { setItems(data); setLoading(false); } });
+    
+    const loadExperiencias = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const experiencias = await experienciaService.getExperienciasDestacadas(8);
+        if (active) {
+          setItems(experiencias);
+        }
+      } catch (err) {
+        if (active) {
+          setError('Error al cargar las experiencias');
+          console.error('Error cargando experiencias:', err);
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadExperiencias();
     return () => { active = false; };
   }, []);
 
   const featured = useMemo(() => pickFeatured(items, 4), [items]);
-  const upcoming = useMemo(() => pickUpcomingDepartures(items, 6), [items]);
 
   return (
     <div>
@@ -94,7 +97,15 @@ export default function Home() {
         </div>
         <div className="row g-4">
           {loading && Array.from({length:4}).map((_,i)=>(<div className="col-6 col-md-4 col-lg-3" key={i}><SkeletonCard/></div>))}
-          {!loading && featured.map((exp: Experience) => (
+          {error && (
+            <div className="col-12">
+              <div className="alert alert-warning" role="alert">
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                {error}
+              </div>
+            </div>
+          )}
+          {!loading && !error && featured.map((exp: ExperienciaListadoDTO) => (
             <div className="col-6 col-md-4 col-lg-3" key={exp.id}>
               <div className="card h-100 shadow-sm border-0">
                 <div className="ratio ratio-4x3 bg-light" style={{backgroundImage:`url(${exp.imagenUrl})`, backgroundSize:'cover', backgroundPosition:'center'}}></div>
@@ -112,16 +123,18 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Sección de próximas salidas comentada temporalmente - requiere endpoint específico */}
+      {/*
       <div className="container pb-5">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h2 className="h4 m-0">Próximas salidas con cupo</h2>
         </div>
         <div className="row g-4">
           {loading && Array.from({length:6}).map((_,i)=>(<div className="col-12 col-md-6 col-lg-4" key={i}><SkeletonCard/></div>))}
-          {/* Próximas salidas se mostrarán cuando se integre completamente con el backend */}
-          {!loading && upcoming.length === 0 && <p className="text-muted small">No hay salidas próximas con cupos.</p>}
+          {!loading && <p className="text-muted small">No hay salidas próximas con cupos.</p>}
         </div>
       </div>
+      */}
 
       <HowItWorks />
       <TrustBenefits />

@@ -23,7 +23,27 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     
     boolean existsByDocumento(String documento);
     
-    // Búsqueda avanzada para administradores
+    // Buscar por rol
+    Page<Usuario> findByRol(Usuario.Rol rol, Pageable pageable);
+    
+    // Búsqueda por texto en múltiples campos
+    @Query("SELECT u FROM Usuario u WHERE " +
+           "LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(COALESCE(u.nombre, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(COALESCE(u.apellido, '')) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Usuario> findBySearch(@Param("search") String search, Pageable pageable);
+    
+    // Búsqueda por texto y rol
+    @Query("SELECT u FROM Usuario u WHERE " +
+           "u.rol = :rol AND (" +
+           "LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(COALESCE(u.nombre, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(COALESCE(u.apellido, '')) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Usuario> findBySearchAndRol(@Param("search") String search, @Param("rol") Usuario.Rol rol, Pageable pageable);
+    
+    // Búsqueda avanzada para administradores (método legacy, mantener por compatibilidad)
     @Query("SELECT u FROM Usuario u WHERE " +
            "(:query IS NULL OR :query = '' OR " +
            "LOWER(CAST(u.username AS string)) LIKE LOWER(CONCAT('%', :query, '%')) OR " +

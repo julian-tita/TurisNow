@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ExperienciaRepository extends JpaRepository<Experiencia, Long> {
     
@@ -32,5 +34,19 @@ public interface ExperienciaRepository extends JpaRepository<Experiencia, Long> 
         @Param("ubicacion") String ubicacion, 
         Pageable pageable
     );
+    
+    /**
+     * Obtener todas las categorías únicas que existen en la base de datos
+     * @return Lista de categorías ordenadas alfabéticamente
+     */
+    @Query("SELECT DISTINCT e.categoria FROM Experiencia e ORDER BY e.categoria")
+    List<Categoria> findDistinctCategorias();
+    
+    /**
+     * Obtener categorías con conteo de experiencias
+     * @return Lista de objetos con categoria y cantidad
+     */
+    @Query("SELECT e.categoria as categoria, COUNT(e) as cantidad FROM Experiencia e GROUP BY e.categoria ORDER BY e.categoria")
+    List<Object[]> findCategoriasConConteo();
 }
 
