@@ -17,6 +17,7 @@ interface AuthContextType {
   token: string | null;
   login: (username: string, password: string) => Promise<boolean>;
   register: (userData: any) => Promise<boolean>; // any para aceptar diferentes formatos
+  loginWithGoogle: (credential: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
   error: string | null;
@@ -142,6 +143,49 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async (credential: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await authService.loginWithGoogle(credential);
+      
+      if (response.token) {
+        setToken(response.token);
+        setUser({
+          id: response.id,
+          username: response.username,
+          email: response.email,
+          nombre: response.nombre,
+          apellido: response.apellido,
+          nombreCompleto: response.nombreCompleto,
+          rol: response.rol
+        });
+        
+        // Guardar en localStorage
+        localStorage.setItem('turisnow_token', response.token);
+        localStorage.setItem('turisnow_user', JSON.stringify({
+          id: response.id,
+          username: response.username,
+          email: response.email,
+          nombre: response.nombre,
+          apellido: response.apellido,
+          nombreCompleto: response.nombreCompleto,
+          rol: response.rol
+        }));
+        
+        return true;
+      }
+      
+      return false;
+    } catch (err: any) {
+      setError(err.message || 'Error al iniciar sesión con Google');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -158,6 +202,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     token,
     login,
     register,
+    loginWithGoogle,
     logout,
     isLoading,
     error,

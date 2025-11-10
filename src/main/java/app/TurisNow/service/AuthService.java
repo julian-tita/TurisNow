@@ -3,10 +3,16 @@ package app.TurisNow.service;
 import app.TurisNow.dto.*;
 import app.TurisNow.model.Usuario;
 import app.TurisNow.repository.UsuarioRepository;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 
 @Service
 public class AuthService {
@@ -16,6 +22,9 @@ public class AuthService {
     
     @Autowired
     private JwtService jwtService;
+    
+    @Value("${google.client.id}")
+    private String googleClientId;
     
     public AuthResponse registrar(RegistroRequest request) {
         // Verificar si el usuario ya existe
@@ -139,5 +148,72 @@ public class AuthService {
         // Actualizar email
         usuario.setEmail(request.getEmail());
         usuarioRepository.save(usuario);
+    }
+    
+    /**
+     * Autentica un usuario mediante Google OAuth.
+     * Verifica el token de Google y crea/actualiza el usuario en la BD.
+     */
+    public AuthResponse googleAuth(GoogleLoginRequest request) {
+        try {
+            // Crear verificador de token de Google
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                new NetHttpTransport(), 
+                GsonFactory.getDefaultInstance()
+            )
+            .setAudience(Collections.singletonList(googleClientId))
+            .build();
+            
+            // Verificar el token
+            GoogleIdToken idToken = verifier.verify(request.getCredential());
+            
+            if (idToken == null) {
+                return new AuthResponse("Token de Google inválido");
+            }
+            
+            // Extraer información del payload
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String googleId = payload.getSubject(); // ID único de Google
+            String email = payload.getEmail();
+            String nombre = (String) payload.get("given_name");
+            String apellido = (String) payload.get("family_name");
+            
+            // Buscar usuario por googleId
+            Usuario usuario = usuarioRepository.findByGoogleId(googleId).orElse(null);
+            
+            // Si no existe por googleId, buscar por email (para vincular cuentas existentes)
+            if (usuario == null) {
+                usuario = usuarioRepository.findByEmail(email).orElse(null);
+                
+                // Si existe por email, vincular cuenta de Google
+                if (usuario != null) {
+                    usuario.setGoogleId(googleId);
+                } else {
+                    // Crear nuevo usuario
+                    usuario = new Usuario();
+                    usuario.setGoogleId(googleId);
+                    usuario.setEmail(email);
+                    usuario.setUsername(email.split("@")[0] + "_" + System.currentTimeMillis()); // Username único
+                    usuario.setPassword(""); // Sin password (login solo por Google)
+                    usuario.setNombre(nombre != null ? nombre : "Usuario");
+                    usuario.setApellido(apellido != null ? apellido : "Google");
+                    usuario.setNombreCompleto((nombre != null ? nombre : "Usuario") + " " + (apellido != null ? apellido : "Google"));
+                    usuario.setRol(Usuario.Rol.USER);
+                    usuario.setActivo(true);
+                }
+            }
+            
+            // Actualizar último acceso
+            usuario.setUltimoAcceso(LocalDateTime.now());
+            usuario = usuarioRepository.save(usuario);
+            
+            // Generar token JWT propio
+            String token = jwtService.generateToken(usuario);
+            
+            return new AuthResponse(token, usuario, "Login con Google exitoso");
+            
+        } catch (Exception e) {
+            return new AuthResponse("Error al verificar token de Google: " + e.getMessage());
+        }
     }
 }

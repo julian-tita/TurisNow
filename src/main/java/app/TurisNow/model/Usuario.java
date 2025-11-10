@@ -39,6 +39,10 @@ public class Usuario implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
     
+    // Campo para Google OAuth (ID único de Google)
+    @Column(name = "google_id", unique = true)
+    private String googleId;
+    
     // Campos nuevos de perfil
     @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
     @Column(length = 100)

@@ -92,6 +92,35 @@ class AuthService {
     }
   }
 
+  async loginWithGoogle(credential: string): Promise<AuthResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ credential }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al iniciar sesión con Google');
+      }
+
+      if (!data.token) {
+        throw new Error('Token no recibido del servidor');
+      }
+
+      return data;
+    } catch (error: any) {
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté ejecutándose en el puerto 9090');
+      }
+      throw error;
+    }
+  }
+
   async validateToken(token: string): Promise<boolean> {
     try {
       const response = await fetch(`${API_BASE_URL}/health`, {

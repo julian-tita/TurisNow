@@ -64,6 +64,24 @@ public class AuthController {
         }
     }
     
+    @Operation(summary = "Login con Google", description = "Autentica un usuario mediante Google OAuth y devuelve un token JWT")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Login con Google exitoso", 
+                    content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Token de Google inválido", 
+                    content = @Content(schema = @Schema(implementation = AuthResponse.class)))
+    })
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> googleAuth(@Valid @RequestBody GoogleLoginRequest request) {
+        AuthResponse response = authService.googleAuth(request);
+        
+        if (response.getToken() != null) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
     @Operation(
         summary = "Obtener perfil del usuario autenticado", 
         description = "Devuelve la información completa del perfil del usuario actual",

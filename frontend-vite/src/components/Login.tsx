@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import GoogleLoginButton from './GoogleLoginButton';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -225,6 +226,29 @@ const Login: React.FC = () => {
                     </>
                   )}
                 </button>
+
+                {/* Separador */}
+                <div className="text-center my-3">
+                  <span className="text-muted">O continúa con</span>
+                </div>
+
+                {/* Botón de Google */}
+                <GoogleLoginButton 
+                  onSuccess={() => {
+                    const storedUser = localStorage.getItem('turisnow_user');
+                    if (storedUser) {
+                      const userData = JSON.parse(storedUser);
+                      if (userData.rol === 'ADMIN') {
+                        navigate('/admin/dashboard');
+                      } else {
+                        navigate('/');
+                      }
+                    } else {
+                      navigate('/');
+                    }
+                  }}
+                  onError={(errorMsg) => setError(errorMsg)}
+                />
 
                 {/* Link a registro */}
                 <div className="text-center">
