@@ -13,6 +13,16 @@ import java.util.List;
 @AllArgsConstructor
 public class CheckoutResponse {
     
+    private boolean success;
+    private String message;
+    
+    // Datos de Mercado Pago
+    private Long pagoId; // ID de nuestro registro de pago
+    private String preferenceId; // ID de la preferencia de MP
+    private String initPoint; // URL para redirigir al usuario a MP
+    private BigDecimal montoTotal;
+    
+    // Datos de las reservas (cuando el pago se complete)
     private List<ReservaCreada> reservas = new ArrayList<>();
     private List<ErrorItem> errores = new ArrayList<>();
     

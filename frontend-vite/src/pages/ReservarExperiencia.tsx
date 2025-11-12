@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import experienciaService from '../services/experienciaService';
 import reservaService from '../services/reservaService';
+import pagoService from '../services/pagoService';
 import userService from '../services/userService';
 import ReservaConfirmacion from '../components/reservas/ReservaConfirmacion';
 import type { ExperienciaDetalleDTO } from '../types/experiencia.types';
@@ -146,28 +147,9 @@ const ReservarExperiencia: React.FC = () => {
         errors.push('El teléfono es obligatorio');
       }
     } else if (step === 4) {
-      // Validar datos de pago
-      if (!pagoData.metodoPago) {
-        errors.push('Debe seleccionar un método de pago');
-      }
-      
-      if (pagoData.metodoPago === 'tarjeta') {
-        if (!pagoData.numeroTarjeta.trim()) {
-          errors.push('El número de tarjeta es obligatorio');
-        }
-        if (!pagoData.nombreTitular.trim()) {
-          errors.push('El nombre del titular es obligatorio');
-        }
-        if (!pagoData.fechaVencimiento.trim()) {
-          errors.push('La fecha de vencimiento es obligatoria');
-        }
-        if (!pagoData.codigoSeguridad.trim()) {
-          errors.push('El código de seguridad es obligatorio');
-        }
-      }
-      
+      // Validar aceptación de términos
       if (!pagoData.aceptaTerminos) {
-        errors.push('Debe aceptar los términos y condiciones');
+        errors.push('Debe aceptar los términos y condiciones para continuar');
       }
     }
 
@@ -195,61 +177,51 @@ const ReservarExperiencia: React.FC = () => {
       return;
     }
 
+     // Confirmar que el usuario quiere proceder al pago
+    if (!window.confirm('Serás redirigido a Mercado Pago para completar tu pago de forma segura. ¿Continuar?')) {
+      return;
+    }
+
     setProcessingPayment(true);
     setPaymentError(null);
-    setStep(5); // Ir al paso 5 inmediatamente
 
     try {
-      // 1. Simular procesamiento de pago (2-3 segundos)
-      await new Promise(resolve => setTimeout(resolve, 2500));
-
-      // 2. Preparar datos de la reserva
-      const reservaRequest: ReservaRequest = {
+      console.log('💳 Iniciando checkout directo con Mercado Pago...');
+      
+      // Crear preferencia de pago en Mercado Pago
+      const response = await pagoService.procesarCheckoutDirecto({
         salidaId: parseInt(salidaId!),
-        cantidadPersonas: reservaData.cantidadPersonas,
-        precioTotal: precioTotal,
-        observaciones: reservaData.observaciones || undefined,
-        // Datos adicionales para el pago (aunque el backend no los procese aún)
-        metodoPago: pagoData.metodoPago,
-        datosPago: pagoData.metodoPago === 'tarjeta' ? {
-          numeroTarjeta: pagoData.numeroTarjeta.slice(-4), // Solo los últimos 4 dígitos
-          titular: pagoData.nombreTitular,
-          cuotas: pagoData.cuotas
-        } : null
-      };
-
-      // Validar datos antes de enviar
-      const validation = reservaService.validarDatosReserva(reservaRequest);
-      if (!validation.valido) {
-        throw new Error(validation.errores.join(', '));
-      }
-
-      // 3. Crear la reserva en el backend
-      const response = await reservaService.crearReserva(reservaRequest);
-      
-      if (!response.id) {
-        throw new Error(response.mensaje || 'Error al crear la reserva');
-      }
-
-      // 4. Confirmar la reserva automáticamente (simula pago exitoso)
-      await reservaService.confirmarReserva(response.id);
-      
-      // 5. Actualizar el estado de la reserva creada
-      setReservaCreada({
-        ...response,
-        estado: 'Confirmada' // Override ya que la confirmamos
+        cantidad: reservaData.cantidadPersonas,
+        observaciones: reservaData.observaciones || undefined
       });
 
-      // 6. Limpiar drafts del localStorage
-      localStorage.removeItem('reservation.draft');
-      
-      toast.success('¡Reserva confirmada exitosamente!');
+      if (response && response.success && response.initPoint) {
+        console.log('🚀 Redirigiendo a Mercado Pago:', response.initPoint);
+        
+        // Guardar datos en localStorage por si el usuario vuelve
+        localStorage.setItem('reservation.pending', JSON.stringify({
+          experienciaId,
+          salidaId,
+          cantidad: reservaData.cantidadPersonas,
+          pagoId: response.pagoId,
+          fecha: new Date().toISOString()
+        }));
+        
+        // Mostrar toast antes de redirigir
+        toast.success('Redirigiendo a Mercado Pago...');
+        
+        // Redirigir a Mercado Pago
+        setTimeout(() => {
+          window.location.href = response.initPoint!;
+        }, 500);
+      } else {
+        throw new Error(response.message || 'No se pudo crear la preferencia de pago');
+      }
 
     } catch (err: any) {
-      const errorMsg = err.message || 'Error al procesar la reserva. Por favor, intenta nuevamente.';
+      const errorMsg = err.message || 'Error al procesar el pago. Por favor, intenta nuevamente.';
       setPaymentError(errorMsg);
       toast.error(errorMsg);
-    } finally {
       setProcessingPayment(false);
     }
   };
@@ -603,189 +575,81 @@ const ReservarExperiencia: React.FC = () => {
                   </h5>
 
                   <div className="row g-3">
-                    {/* Selección de método de pago */}
+                    {/* Información de Mercado Pago */}
                     <div className="col-12">
-                      <label className="form-label fw-medium">Selecciona tu método de pago</label>
-                      <div className="row g-2">
-                        <div className="col-md-4">
-                          <div className={`card payment-method-card ${pagoData.metodoPago === 'tarjeta' ? 'border-primary bg-light' : ''}`} 
-                               onClick={() => setPagoData(prev => ({ ...prev, metodoPago: 'tarjeta' }))}>
-                            <div className="card-body text-center py-3">
-                              <i className="fas fa-credit-card fa-2x text-primary mb-2"></i>
-                              <h6 className="mb-1">Tarjeta</h6>
-                              <small className="text-muted">Débito/Crédito</small>
+                      <div className="alert alert-primary d-flex align-items-center" role="alert">
+                        <i className="fas fa-info-circle fa-2x me-3"></i>
+                        <div>
+                          <h6 className="alert-heading mb-1">Pago seguro con Mercado Pago</h6>
+                          <p className="mb-0">
+                            Serás redirigido a Mercado Pago para completar tu pago de forma segura.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Métodos de pago disponibles en Mercado Pago */}
+                    <div className="col-12">
+                      <div className="card">
+                        <div className="card-body">
+                          <h6 className="card-title mb-3">
+                            <i className="fas fa-credit-card me-2"></i>
+                            Métodos de pago disponibles
+                          </h6>
+                          <div className="row g-3">
+                            <div className="col-md-4">
+                              <div className="text-center p-3 border rounded">
+                                <i className="fas fa-credit-card fa-2x text-primary mb-2"></i>
+                                <h6 className="mb-1">Tarjetas</h6>
+                                <small className="text-muted">Crédito y débito</small>
+                              </div>
+                            </div>
+                            <div className="col-md-4">
+                              <div className="text-center p-3 border rounded">
+                                <i className="fas fa-money-bill-wave fa-2x text-success mb-2"></i>
+                                <h6 className="mb-1">Efectivo</h6>
+                                <small className="text-muted">Rapipago, Pago Fácil</small>
+                              </div>
+                            </div>
+                            <div className="col-md-4">
+                              <div className="text-center p-3 border rounded">
+                                <i className="fas fa-university fa-2x text-info mb-2"></i>
+                                <h6 className="mb-1">Transferencia</h6>
+                                <small className="text-muted">Débito automático</small>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="col-md-4">
-                          <div className={`card payment-method-card ${pagoData.metodoPago === 'transferencia' ? 'border-primary bg-light' : ''}`}
-                               onClick={() => setPagoData(prev => ({ ...prev, metodoPago: 'transferencia' }))}>
-                            <div className="card-body text-center py-3">
-                              <i className="fas fa-university fa-2x text-success mb-2"></i>
-                              <h6 className="mb-1">Transferencia</h6>
-                              <small className="text-muted">Bancaria</small>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-md-4">
-                          <div className={`card payment-method-card ${pagoData.metodoPago === 'efectivo' ? 'border-primary bg-light' : ''}`}
-                               onClick={() => setPagoData(prev => ({ ...prev, metodoPago: 'efectivo' }))}>
-                            <div className="card-body text-center py-3">
-                              <i className="fas fa-money-bill-wave fa-2x text-warning mb-2"></i>
-                              <h6 className="mb-1">Efectivo</h6>
-                              <small className="text-muted">Al momento</small>
-                            </div>
+                          <div className="text-center mt-3">
+                            <img 
+                              src="https://http2.mlstatic.com/storage/logos-api-admin/a5f047d0-9be0-11ec-aad4-c3381f368aaf-m.svg" 
+                              alt="Mercado Pago" 
+                              style={{ height: '32px' }}
+                            />
+                            <p className="text-muted small mt-2 mb-0">
+                              <i className="fas fa-lock me-1"></i>
+                              Tus datos están protegidos por Mercado Pago
+                            </p>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Formulario de tarjeta */}
-                    {pagoData.metodoPago === 'tarjeta' && (
-                      <>
-                        <div className="col-12">
-                          <div className="card bg-light">
-                            <div className="card-body">
-                              <h6 className="card-title">
-                                <i className="fas fa-credit-card me-2"></i>
-                                Datos de la tarjeta
-                              </h6>
-                              
-                              <div className="row g-3">
-                                <div className="col-12">
-                                  <label className="form-label">Número de tarjeta</label>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    value={pagoData.numeroTarjeta}
-                                    onChange={(e) => {
-                                      // Formatear número de tarjeta (xxxx xxxx xxxx xxxx)
-                                      const value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/g, '');
-                                      const formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
-                                      setPagoData(prev => ({ ...prev, numeroTarjeta: formattedValue }));
-                                    }}
-                                    placeholder="1234 5678 9012 3456"
-                                    maxLength={19}
-                                  />
-                                </div>
-
-                                <div className="col-md-8">
-                                  <label className="form-label">Nombre del titular</label>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    value={pagoData.nombreTitular}
-                                    onChange={(e) => setPagoData(prev => ({ 
-                                      ...prev, 
-                                      nombreTitular: e.target.value.toUpperCase() 
-                                    }))}
-                                    placeholder="NOMBRE APELLIDO"
-                                  />
-                                </div>
-
-                                <div className="col-md-4">
-                                  <label className="form-label">Vencimiento</label>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    value={pagoData.fechaVencimiento}
-                                    onChange={(e) => {
-                                      const value = e.target.value.replace(/[^0-9]/g, '');
-                                      if (value.length <= 2) {
-                                        setPagoData(prev => ({ ...prev, fechaVencimiento: value }));
-                                      } else {
-                                        setPagoData(prev => ({ ...prev, fechaVencimiento: `${value.slice(0,2)}/${value.slice(2,4)}` }));
-                                      }
-                                    }}
-                                    placeholder="MM/YY"
-                                    maxLength={5}
-                                  />
-                                </div>
-
-                                <div className="col-md-4">
-                                  <label className="form-label">Código de seguridad</label>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    value={pagoData.codigoSeguridad}
-                                    onChange={(e) => setPagoData(prev => ({ 
-                                      ...prev, 
-                                      codigoSeguridad: e.target.value.replace(/[^0-9]/g, '') 
-                                    }))}
-                                    placeholder="123"
-                                    maxLength={4}
-                                  />
-                                </div>
-
-                                <div className="col-md-8">
-                                  <label className="form-label">Cuotas</label>
-                                  <select
-                                    className="form-select"
-                                    value={pagoData.cuotas}
-                                    onChange={(e) => setPagoData(prev => ({ 
-                                      ...prev, 
-                                      cuotas: parseInt(e.target.value) 
-                                    }))}
-                                  >
-                                    <option value={1}>1 cuota sin interés - {formatPrice(precioTotal)}</option>
-                                    <option value={3}>3 cuotas sin interés - {formatPrice(precioTotal / 3)}</option>
-                                    <option value={6}>6 cuotas sin interés - {formatPrice(precioTotal / 6)}</option>
-                                    <option value={12}>12 cuotas con interés - {formatPrice((precioTotal * 1.1) / 12)}</option>
-                                  </select>
-                                </div>
-                              </div>
+                    {/* Resumen del pago */}
+                    <div className="col-12">
+                      <div className="card bg-light">
+                        <div className="card-body">
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div>
+                              <h6 className="mb-1">Total a pagar</h6>
+                              <small className="text-muted">Se procesará al confirmar</small>
                             </div>
+                            <h4 className="mb-0 text-primary">
+                              {formatPrice(precioTotal)}
+                            </h4>
                           </div>
                         </div>
-                      </>
-                    )}
-
-                    {/* Instrucciones para transferencia */}
-                    {pagoData.metodoPago === 'transferencia' && (
-                      <div className="col-12">
-                        <div className="alert alert-info">
-                          <h6 className="alert-heading">
-                            <i className="fas fa-university me-2"></i>
-                            Datos para transferencia bancaria
-                          </h6>
-                          <hr />
-                          <div className="row">
-                            <div className="col-md-6">
-                              <p><strong>Banco:</strong> Banco Nación</p>
-                              <p><strong>CBU:</strong> 0110599520000012345671</p>
-                              <p><strong>Alias:</strong> TURISNOW.PAGO</p>
-                            </div>
-                            <div className="col-md-6">
-                              <p><strong>Titular:</strong> TurisNow SRL</p>
-                              <p><strong>CUIT:</strong> 30-12345678-9</p>
-                              <p><strong>Monto:</strong> <span className="h6 text-primary">{formatPrice(precioTotal)}</span></p>
-                            </div>
-                          </div>
-                          <p className="mb-0 mt-2">
-                            <strong>Importante:</strong> Envía el comprobante a reservas@turisnow.com para confirmar tu pago.
-                          </p>
-                        </div>
                       </div>
-                    )}
-
-                    {/* Instrucciones para efectivo */}
-                    {pagoData.metodoPago === 'efectivo' && (
-                      <div className="col-12">
-                        <div className="alert alert-warning">
-                          <h6 className="alert-heading">
-                            <i className="fas fa-money-bill-wave me-2"></i>
-                            Pago en efectivo
-                          </h6>
-                          <p>
-                            Podrás abonar en efectivo al momento de realizar la actividad. 
-                            Te contactaremos 24 horas antes para confirmar todos los detalles.
-                          </p>
-                          <p className="mb-0">
-                            <strong>Monto a abonar:</strong> <span className="h6 text-primary">{formatPrice(precioTotal)}</span>
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                    </div>
 
                     {/* Términos y condiciones */}
                     <div className="col-12">
@@ -846,11 +710,7 @@ const ReservarExperiencia: React.FC = () => {
                             total: precioTotal,
                             moneda: experiencia?.moneda || 'ARS',
                             fechaReserva: new Date().toISOString(),
-                            metodoPago: pagoData.metodoPago === 'tarjeta' 
-                              ? `Tarjeta ****${pagoData.numeroTarjeta.slice(-4)}`
-                              : pagoData.metodoPago === 'transferencia' 
-                              ? 'Transferencia Bancaria'
-                              : 'Pago en Efectivo',
+                            metodoPago: 'Mercado Pago',
                             experienciaTitulo: experiencia?.titulo,
                             fechaInicio: salidaSeleccionada?.fechaInicio,
                             fechaFin: salidaSeleccionada?.fechaFin,
@@ -938,9 +798,8 @@ const ReservarExperiencia: React.FC = () => {
                               <div className="row">
                                 <div className="col-6"><strong>Método de pago:</strong></div>
                                 <div className="col-6">
-                                  {pagoData.metodoPago === 'tarjeta' && `Tarjeta ****${pagoData.numeroTarjeta.slice(-4)}`}
-                                  {pagoData.metodoPago === 'transferencia' && 'Transferencia Bancaria'}
-                                  {pagoData.metodoPago === 'efectivo' && 'Pago en Efectivo'}
+                                  <i className="fas fa-credit-card me-1"></i>
+                                  Mercado Pago
                                 </div>
                               </div>
                             </div>

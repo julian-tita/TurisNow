@@ -127,6 +127,29 @@ const Footer: React.FC = () => {
           </div>
         </div>
         <div className="container">
+          {/* Métodos de pago */}
+          <div className="row py-4 border-top border-secondary">
+            <div className="col-12 text-center">
+              <h6 className="text-white mb-3">Métodos de Pago Aceptados</h6>
+              <div className="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+                <img 
+                  src="https://http2.mlstatic.com/storage/logos-api-admin/a5f047d0-9be0-11ec-aad4-c3381f368aaf-m.svg" 
+                  alt="Mercado Pago" 
+                  style={{ height: '30px', filter: 'brightness(0) invert(1)' }}
+                />
+                <span className="text-light">|</span>
+                <i className="fab fa-cc-visa text-light" style={{ fontSize: '2rem' }}></i>
+                <i className="fab fa-cc-mastercard text-light" style={{ fontSize: '2rem' }}></i>
+                <i className="fab fa-cc-amex text-light" style={{ fontSize: '2rem' }}></i>
+                <span className="text-light small">+ más opciones</span>
+              </div>
+              <p className="text-light small mt-2 mb-0">
+                <i className="fa fa-lock me-1"></i>
+                Pagos seguros procesados por Mercado Pago
+              </p>
+            </div>
+          </div>
+
           <div className="copyright">
             <div className="row">
               <div className="col-md-6 text-center text-md-start mb-3 mb-md-0">
