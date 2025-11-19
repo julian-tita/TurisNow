@@ -40,7 +40,6 @@ public class EmailService {
     @Value("${turisnow.email.enabled:true}")
     private boolean emailEnabled;
     
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     
     /**

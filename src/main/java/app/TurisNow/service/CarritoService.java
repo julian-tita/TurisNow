@@ -34,9 +34,6 @@ public class CarritoService {
     @Autowired
     private ReservaService reservaService;
     
-    @Autowired
-    private ReservaRepository reservaRepository;
-    
     private static final DateTimeFormatter FECHA_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     
     /**
