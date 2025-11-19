@@ -21,7 +21,8 @@ public class CarritoDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CarritoItemDTO {
-        private Long itemId;
+        private Long id;  // Alias para compatibilidad con frontend
+        private Long itemId;  // Mantener por compatibilidad
         private Long experienciaId;
         private Long salidaId;
         private String titulo;
@@ -33,6 +34,37 @@ public class CarritoDTO {
         private BigDecimal precioUnitario;
         private String moneda;
         private BigDecimal subtotal;
+        
+        // Constructor personalizado que inicializa ambos (id e itemId con el mismo valor)
+        public CarritoItemDTO(Long id, Long experienciaId, Long salidaId, String titulo, 
+                              String descripcion, String imagenUrl, String fechaInicio, 
+                              String fechaFin, Integer cantidad, BigDecimal precioUnitario, 
+                              String moneda, BigDecimal subtotal) {
+            this.id = id;
+            this.itemId = id;  // itemId = id para mantener compatibilidad
+            this.experienciaId = experienciaId;
+            this.salidaId = salidaId;
+            this.titulo = titulo;
+            this.descripcion = descripcion;
+            this.imagenUrl = imagenUrl;
+            this.fechaInicio = fechaInicio;
+            this.fechaFin = fechaFin;
+            this.cantidad = cantidad;
+            this.precioUnitario = precioUnitario;
+            this.moneda = moneda;
+            this.subtotal = subtotal;
+        }
+        
+        // Setter personalizado para mantener sincronizado id e itemId
+        public void setId(Long id) {
+            this.id = id;
+            this.itemId = id;
+        }
+        
+        public void setItemId(Long itemId) {
+            this.itemId = itemId;
+            this.id = itemId;
+        }
     }
 }
 

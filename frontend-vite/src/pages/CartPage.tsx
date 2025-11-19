@@ -37,10 +37,28 @@ const CartPage: React.FC = () => {
   };
 
   const handleCheckout = async () => {
+    // Mostrar confirmación antes de redirigir
+    if (!window.confirm('Serás redirigido a Mercado Pago para completar tu pago de forma segura. ¿Continuar?')) {
+      return;
+    }
+
     const response = await procesarCheckout();
     if (response && response.success) {
-      // Redirigir a mis reservas después de checkout exitoso
-      navigate('/mis-reservas');
+      // Si recibimos un initPoint, redirigir a Mercado Pago
+      if (response.initPoint) {
+        console.log('🚀 Redirigiendo a Mercado Pago:', response.initPoint);
+        
+        // Mostrar mensaje de redirección
+        alert('Redirigiendo a Mercado Pago para completar tu pago...');
+        
+        // Redirigir después de un pequeño delay
+        setTimeout(() => {
+          window.location.href = response.initPoint;
+        }, 500);
+      } else {
+        // Fallback: si no hay initPoint, ir a mis reservas (checkout directo)
+        navigate('/mis-reservas');
+      }
     }
   };
 
@@ -238,14 +256,25 @@ const CartPage: React.FC = () => {
                           <span className="text-primary">{formatPrice(total)}</span>
                         </div>
                         
-                        <div className="d-grid gap-2 mt-4">
+                        {/* Métodos de pago */}
+                        <div className="alert alert-info mb-3">
+                          <div className="d-flex align-items-center">
+                            <i className="fa fa-credit-card me-2"></i>
+                            <small>
+                              <strong>Métodos de pago disponibles:</strong><br />
+                              Tarjetas de crédito y débito, efectivo y más
+                            </small>
+                          </div>
+                        </div>
+                        
+                        <div className="d-grid gap-2 mt-3">
                           <button 
                             className="btn btn-primary btn-lg"
                             onClick={handleCheckout}
                             disabled={estaVacio}
                           >
-                            <i className="fa fa-check me-2"></i>
-                            Confirmar Reservas
+                            <i className="fa fa-credit-card me-2"></i>
+                            Proceder al Pago
                           </button>
                           <Link to="/experiencias" className="btn btn-outline-secondary">
                             Seguir explorando
@@ -253,9 +282,16 @@ const CartPage: React.FC = () => {
                         </div>
                         
                         <div className="text-center mt-3">
+                          <div className="mb-2">
+                            <img 
+                              src="https://http2.mlstatic.com/storage/logos-api-admin/a5f047d0-9be0-11ec-aad4-c3381f368aaf-m.svg" 
+                              alt="Mercado Pago" 
+                              style={{ height: '24px' }}
+                            />
+                          </div>
                           <small className="text-muted">
                             <i className="fa fa-lock me-1"></i>
-                            Compra segura y protegida
+                            Pago seguro procesado por Mercado Pago
                           </small>
                         </div>
                       </div>

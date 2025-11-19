@@ -40,6 +40,12 @@ public class ReservaDetalleDTO {
     private LocalDateTime fechaCancelacion;
     private String observaciones;
     
+    // QR Code y Check-in
+    private String tokenQr;
+    private Boolean checkinRealizado;
+    private LocalDateTime fechaCheckin;
+    private String checkinPor;
+    
     // Información del usuario
     private String nombreUsuario;
     private String emailUsuario;

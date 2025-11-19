@@ -1,5 +1,6 @@
 package app.TurisNow.repository;
 
+import app.TurisNow.model.Pago;
 import app.TurisNow.model.Reserva;
 import app.TurisNow.model.Reserva.EstadoReserva;
 import org.springframework.data.domain.Page;
@@ -68,4 +69,16 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
            "JOIN FETCH s.experiencia e " +
            "WHERE r.id = :reservaId")
     Optional<Reserva> findByIdWithDetails(@Param("reservaId") Long reservaId);
+    
+    // Buscar reservas por pago (para verificar idempotencia)
+    List<Reserva> findByPago(Pago pago);
+    
+    // Buscar reserva por token QR
+    @Query("SELECT r FROM Reserva r " +
+           "JOIN FETCH r.usuario u " +
+           "JOIN FETCH r.salida s " +
+           "JOIN FETCH s.experiencia e " +
+           "JOIN FETCH e.ubicacion " +
+           "WHERE r.tokenQr = :tokenQr")
+    Optional<Reserva> findByTokenQrWithDetails(@Param("tokenQr") String tokenQr);
 }

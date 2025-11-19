@@ -19,6 +19,9 @@ import DashboardAdmin from './components/admin/DashboardAdmin';
 import ReservarExperiencia from './pages/ReservarExperiencia';
 import MisReservas from './pages/MisReservas';
 import PerfilUsuario from './pages/PerfilUsuario';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentFailurePage from './pages/PaymentFailurePage';
+import PaymentPendingPage from './pages/PaymentPendingPage';
 
 import './assets/css/style.css';
 
@@ -98,7 +101,14 @@ function App() {
 
               {/* Likes and Cart */}
               <Route path="/likes" element={<LikePage />} />
-              <Route path="/cart" element={<CartPage />} />            {/* Auth */}
+              <Route path="/cart" element={<CartPage />} />
+              
+              {/* Payment Callbacks - Mercado Pago */}
+              <Route path="/payment/success" element={<PaymentSuccessPage />} />
+              <Route path="/payment/failure" element={<PaymentFailurePage />} />
+              <Route path="/payment/pending" element={<PaymentPendingPage />} />
+
+            {/* Auth */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 

@@ -98,6 +98,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api/test/public").permitAll()
                 .requestMatchers("/api/experiencias/**").permitAll()
+                .requestMatchers("/api/webhooks/**").permitAll() // Webhooks de Mercado Pago
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/swagger-ui.html").permitAll()

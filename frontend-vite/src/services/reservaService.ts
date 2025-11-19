@@ -67,6 +67,19 @@ export interface ReservaResponse {
   mensaje: string;
 }
 
+// QR Data interface - defined before ReservaDetalleDTO to ensure proper export
+export type QRData = {
+  reservaId: number;
+  tokenQr: string;
+  qrCodeBase64: string;
+  estadoReserva: string;
+  checkinRealizado: boolean;
+  fechaCheckin?: string;
+  tituloExperiencia: string;
+  fechaInicio: string;
+  cantidadPersonas: number;
+};
+
 export interface ReservaDetalleDTO {
   id: number;
   salidaId: number;
@@ -85,6 +98,11 @@ export interface ReservaDetalleDTO {
   observaciones?: string;
   nombreUsuario: string;
   emailUsuario: string;
+  // QR Code y Check-in
+  tokenQr?: string;
+  checkinRealizado?: boolean;
+  fechaCheckin?: string;
+  checkinPor?: string;
 }
 
 class ReservaService {
@@ -314,8 +332,35 @@ class ReservaService {
       );
     }
   }
+
+  /**
+   * Obtener código QR de una reserva
+   */
+  async obtenerQRReserva(reservaId: number): Promise<QRData> {
+    try {
+      console.log('🔲 Fetching QR code for reservation:', reservaId);
+      
+      const response = await axios.get(
+        `${API_URL}/reservas/${reservaId}/qr`,
+        { headers: this.getAuthHeaders() }
+      );
+      
+      console.log('✅ QR code fetched successfully:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error fetching QR code:', error);
+      throw new Error(
+        error.response?.data?.mensaje || 
+        error.message || 
+        'Error al obtener el código QR'
+      );
+    }
+  }
 }
 
 // Export singleton instance
 const reservaService = new ReservaService();
 export default reservaService;
+
+// Re-export types for convenience
+export type { QRData, ReservaDetalleDTO, ReservaRequest, ReservaResponse };

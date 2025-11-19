@@ -39,16 +39,25 @@ export interface UpdateCarritoItemRequest {
 
 export interface CheckoutResponse {
   success: boolean;
-  reservas: Array<{
+  message: string;
+  // Datos de Mercado Pago
+  pagoId?: number;
+  preferenceId?: string;
+  initPoint?: string; // URL para redirigir al usuario a Mercado Pago
+  montoTotal?: number;
+  // Datos de reservas (cuando el pago se complete)
+  reservas?: Array<{
     id: number;
-    experienciaId: number;
     salidaId: number;
     cantidadPersonas: number;
     precioTotal: number;
     estado: string;
   }>;
-  errores: string[];
-  message: string;
+  errores?: Array<{
+    salidaId: number;
+    titulo: string;
+    mensaje: string;
+  }>;
 }
 
 class CarritoService {

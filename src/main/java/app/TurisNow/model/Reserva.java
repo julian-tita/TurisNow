@@ -55,6 +55,23 @@ public class Reserva {
     @Column(name = "observaciones", columnDefinition = "TEXT")
     private String observaciones;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pago_id")
+    private Pago pago; // Relación con el pago asociado
+    
+    // QR y Check-in
+    @Column(name = "token_qr", unique = true, length = 100)
+    private String tokenQr; // Token único para el QR (ej: R27-A3F9K2M8)
+    
+    @Column(name = "checkin_realizado")
+    private Boolean checkinRealizado = false;
+    
+    @Column(name = "fecha_checkin")
+    private LocalDateTime fechaCheckin;
+    
+    @Column(name = "checkin_por")
+    private String checkinPor; // Usuario que hizo el check-in
+    
     @PrePersist
     protected void onCreate() {
         fechaReserva = LocalDateTime.now();
@@ -62,7 +79,8 @@ public class Reserva {
     
     // Enums
     public enum EstadoReserva {
-        PENDIENTE("Pendiente"),
+        PENDIENTE_PAGO("Pendiente de Pago"), // Reserva creada pero pago no completado
+        PENDIENTE("Pendiente"), // Pago completado, pendiente de confirmación
         CONFIRMADA("Confirmada"),
         CANCELADA("Cancelada"),
         COMPLETADA("Completada");

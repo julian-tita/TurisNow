@@ -2,6 +2,7 @@ package app.TurisNow.controller;
 
 import app.TurisNow.dto.*;
 import app.TurisNow.service.CarritoService;
+import app.TurisNow.service.PagoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -24,6 +25,9 @@ public class CarritoController {
     
     @Autowired
     private CarritoService carritoService;
+    
+    @Autowired
+    private PagoService pagoService;
     
     @Operation(
         summary = "Obtener carrito",
@@ -127,13 +131,36 @@ public class CarritoController {
     }
     
     @Operation(
-        summary = "Realizar checkout",
-        description = "Convierte todos los items del carrito en reservas. Procesa transaccionalmente cada item y devuelve resultados exitosos y errores.",
+        summary = "Realizar checkout con Mercado Pago",
+        description = "Inicia el proceso de pago creando una preferencia en Mercado Pago. Retorna la URL (init_point) a la que se debe redirigir al usuario para completar el pago.",
         security = @SecurityRequirement(name = "bearer-jwt")
     )
-    @ApiResponse(responseCode = "200", description = "Checkout procesado (revisar reservas y errores en la respuesta)")
+    @ApiResponse(responseCode = "200", description = "Preferencia creada, usar el init_point para redirigir al usuario")
     @PostMapping("/checkout")
     public ResponseEntity<?> checkout() {
+        try {
+            String username = obtenerUsernameAutenticado();
+            
+            // Ahora el checkout crea una preferencia de pago en Mercado Pago
+            CheckoutResponse response = pagoService.crearPreferenciaPago(username);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
+    @Operation(
+        summary = "Checkout directo (sin pasarela de pago)",
+        description = "[DEPRECADO] Convierte los items del carrito en reservas directamente, sin pasar por Mercado Pago. Solo para testing o casos especiales.",
+        security = @SecurityRequirement(name = "bearer-jwt")
+    )
+    @ApiResponse(responseCode = "200", description = "Reservas creadas directamente")
+    @PostMapping("/checkout-direct")
+    public ResponseEntity<?> checkoutDirect() {
         try {
             String username = obtenerUsernameAutenticado();
             CheckoutResponse response = carritoService.checkout(username);
