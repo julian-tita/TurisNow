@@ -2,13 +2,19 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import reservaService, { type ReservaDetalleDTO } from '../../services/reservaService';
+import reservaService, { type ReservaDetalleDTO, type QRData } from '../../services/reservaService';
+import QRModal from '../reservas/QRModal';
 
 const ProfileReservas: React.FC = () => {
   const [reservas, setReservas] = useState<ReservaDetalleDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filtroEstado, setFiltroEstado] = useState<string>('');
+  
+  // Estados para el modal de QR
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrData, setQrData] = useState<QRData | null>(null);
+  const [loadingQR, setLoadingQR] = useState(false);
 
   const cargarReservas = async () => {
     setLoading(true);
@@ -28,6 +34,25 @@ const ProfileReservas: React.FC = () => {
   useEffect(() => {
     cargarReservas();
   }, [filtroEstado]);
+
+  const handleVerQR = async (reservaId: number) => {
+    setLoadingQR(true);
+    try {
+      const data = await reservaService.obtenerQRReserva(reservaId);
+      setQrData(data);
+      setShowQRModal(true);
+    } catch (e: any) {
+      const errorMsg = e?.message || 'Error al obtener el código QR';
+      toast.error(errorMsg);
+    } finally {
+      setLoadingQR(false);
+    }
+  };
+
+  const closeQRModal = () => {
+    setShowQRModal(false);
+    setQrData(null);
+  };
 
   const getEstadoBadgeClass = (estado: string) => {
     switch (estado?.toUpperCase()) {
@@ -203,6 +228,16 @@ const ProfileReservas: React.FC = () => {
                       </small>
                     </div>
                   )}
+
+                  {/* Badge de Check-in */}
+                  {reserva.checkinRealizado && (
+                    <div className="mt-2">
+                      <span className="badge bg-success">
+                        <i className="fas fa-check-circle me-1"></i>
+                        Check-in Realizado
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="ms-3 text-end">
@@ -211,14 +246,40 @@ const ProfileReservas: React.FC = () => {
                       ${reserva.precioTotal.toLocaleString()}
                     </strong>
                   </div>
-                  <small className="text-muted d-block">
+                  <small className="text-muted d-block mb-2">
                     ID: #{reserva.id}
                   </small>
+                  
+                  {/* Botón Ver QR - Solo si la reserva está confirmada y tiene token */}
+                  {reserva.tokenQr && reserva.estado === 'Confirmada' && (
+                    <button
+                      className="btn btn-sm btn-outline-primary w-100"
+                      onClick={() => handleVerQR(reserva.id)}
+                      disabled={loadingQR}
+                    >
+                      {loadingQR ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-1"></span>
+                          Cargando...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-qrcode me-1"></i>
+                          Ver QR
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {/* Modal de QR */}
+      {showQRModal && qrData && (
+        <QRModal qrData={qrData} onClose={closeQRModal} />
       )}
     </div>
   );

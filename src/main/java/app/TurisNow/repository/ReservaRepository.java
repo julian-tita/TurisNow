@@ -72,4 +72,13 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     
     // Buscar reservas por pago (para verificar idempotencia)
     List<Reserva> findByPago(Pago pago);
+    
+    // Buscar reserva por token QR
+    @Query("SELECT r FROM Reserva r " +
+           "JOIN FETCH r.usuario u " +
+           "JOIN FETCH r.salida s " +
+           "JOIN FETCH s.experiencia e " +
+           "JOIN FETCH e.ubicacion " +
+           "WHERE r.tokenQr = :tokenQr")
+    Optional<Reserva> findByTokenQrWithDetails(@Param("tokenQr") String tokenQr);
 }

@@ -50,6 +50,12 @@ public class PagoService {
     @Autowired
     private ReservaService reservaService;
     
+    @Autowired
+    private EmailService emailService;
+    
+    @Autowired
+    private QRService qrService;
+    
     @Value("${mercadopago.webhook.url}")
     private String webhookUrl;
     
@@ -603,6 +609,17 @@ public class PagoService {
                         
                         logger.info("✅ Reserva {} creada y confirmada para salida: {}", 
                             reserva.getId(), item.getSalida().getId());
+                        
+                        // Enviar email de confirmación
+                        try {
+                            ReservaEmailDTO emailDTO = construirEmailDTO(reserva, pago);
+                            emailService.enviarEmailConfirmacionReserva(emailDTO);
+                            logger.info("📧 Email de confirmación enviado para reserva {}", reserva.getId());
+                        } catch (Exception e) {
+                            logger.warn("⚠️ No se pudo enviar email para reserva {}: {}", 
+                                reserva.getId(), e.getMessage());
+                            // No lanzamos excepción para no afectar el proceso de reserva
+                        }
                     } else {
                         logger.error("❌ No se pudo crear la reserva para salida {}: {}", 
                             item.getSalida().getId(), reservaResponse.getMensaje());
@@ -706,6 +723,17 @@ public class PagoService {
                 
                 logger.info("✅ Reserva directa {} creada y confirmada para salida: {} ({} personas)", 
                     reserva.getId(), salidaId, cantidadPersonas);
+                
+                // Enviar email de confirmación
+                try {
+                    ReservaEmailDTO emailDTO = construirEmailDTO(reserva, pago);
+                    emailService.enviarEmailConfirmacionReserva(emailDTO);
+                    logger.info("📧 Email de confirmación enviado para reserva {}", reserva.getId());
+                } catch (Exception e) {
+                    logger.warn("⚠️ No se pudo enviar email para reserva {}: {}", 
+                        reserva.getId(), e.getMessage());
+                    // No lanzamos excepción para no afectar el proceso de reserva
+                }
             } else {
                 logger.error("❌ No se pudo crear la reserva directa para salida {}: {}", 
                     salidaId, reservaResponse.getMensaje());
@@ -747,6 +775,62 @@ public class PagoService {
             case "charged_back" -> Pago.EstadoPago.CHARGED_BACK;
             default -> Pago.EstadoPago.PENDIENTE;
         };
+    }
+    
+    /**
+     * Construye un DTO con información para enviar email de confirmación
+     */
+    private ReservaEmailDTO construirEmailDTO(Reserva reserva, Pago pago) {
+        Experiencia experiencia = reserva.getSalida().getExperiencia();
+        Ubicacion ubicacion = experiencia.getUbicacion();
+        Usuario usuario = reserva.getUsuario();
+        
+        // Generar código QR
+        String qrBase64 = null;
+        try {
+            if (reserva.getTokenQr() != null) {
+                qrBase64 = qrService.generarQRParaReserva(reserva.getTokenQr());
+                logger.info("🔲 QR generado para reserva {} (Token: {})", reserva.getId(), reserva.getTokenQr());
+            }
+        } catch (Exception e) {
+            logger.warn("⚠️ No se pudo generar QR para reserva {}: {}", reserva.getId(), e.getMessage());
+            // No lanzamos excepción, el email se envía sin QR
+        }
+        
+        return ReservaEmailDTO.builder()
+                // Usuario
+                .nombreUsuario(usuario.getNombreCompleto())
+                .emailUsuario(usuario.getEmail())
+                // Reserva
+                .reservaId(reserva.getId())
+                .fechaReserva(reserva.getFechaReserva())
+                .cantidadPersonas(reserva.getCantidadPersonas())
+                .precioTotal(reserva.getPrecioTotal())
+                .moneda(experiencia.getMoneda().name())
+                // Experiencia
+                .tituloExperiencia(experiencia.getTitulo())
+                .descripcionExperiencia(experiencia.getDescripcion())
+                .imagenUrlExperiencia(experiencia.getImagenUrl())
+                .categoriaExperiencia(experiencia.getCategoria().getValor())
+                // Salida
+                .salidaId(reserva.getSalida().getId())
+                .fechaInicio(reserva.getSalida().getFechaInicio())
+                .fechaFin(reserva.getSalida().getFechaFin())
+                // Ubicación
+                .ciudad(ubicacion.getCiudad())
+                .region(ubicacion.getRegion())
+                .pais(ubicacion.getPais())
+                // Pago
+                .pagoId(pago.getId())
+                .paymentId(pago.getPaymentId())
+                .metodoPago(pago.getMetodoPago())
+                .fechaPago(pago.getFechaAprobacion())
+                // Observaciones
+                .observaciones(reserva.getObservaciones())
+                // QR Code
+                .tokenQr(reserva.getTokenQr())
+                .qrCodeBase64(qrBase64)
+                .build();
     }
     
     /**

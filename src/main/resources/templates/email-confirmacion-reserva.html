@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmación de Reserva - TurisNow</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 10px 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .success-badge {
+            background-color: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .experience-card {
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        .experience-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #667eea;
+            margin: 0 0 10px;
+        }
+        .experience-description {
+            color: #6b7280;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .category-badge {
+            background-color: #dbeafe;
+            color: #1e40af;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .details-section {
+            margin: 20px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .detail-value {
+            color: #1f2937;
+            text-align: right;
+        }
+        .price-total {
+            background-color: #fef3c7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .price-label {
+            font-size: 14px;
+            color: #92400e;
+            font-weight: 600;
+        }
+        .price-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #92400e;
+            margin: 5px 0;
+        }
+        .info-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-box-title {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+        .info-box-content {
+            color: #1e3a8a;
+            font-size: 14px;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 20px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .button {
+            display: inline-block;
+            background-color: #667eea;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 15px 0;
+        }
+        @media only screen and (max-width: 600px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+            .detail-row {
+                flex-direction: column;
+            }
+            .detail-value {
+                text-align: left;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎉 ¡Reserva Confirmada!</h1>
+            <p>Tu aventura está lista para comenzar</p>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <p>Hola <strong th:text="${nombreUsuario}">Usuario</strong>,</p>
+            
+            <div class="success-badge">
+                ✅ Reserva Confirmada
+            </div>
+            
+            <p>¡Excelentes noticias! Tu reserva ha sido confirmada exitosamente. Estamos emocionados de que formes parte de esta experiencia única.</p>
+            
+            <!-- Experience Card -->
+            <div class="experience-card">
+                <h2 class="experience-title" th:text="${tituloExperiencia}">Experiencia</h2>
+                <p class="experience-description" th:text="${descripcionExperiencia}">Descripción de la experiencia</p>
+                <span class="category-badge" th:text="${categoria}">Categoría</span>
+            </div>
+            
+            <!-- Reservation Details -->
+            <div class="details-section">
+                <h3 style="color: #1f2937; margin-bottom: 15px;">📋 Detalles de tu Reserva</h3>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Número de Reserva:</span>
+                    <span class="detail-value" th:text="'#' + ${reservaId}">#123</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">📅 Fecha de Inicio:</span>
+                    <span class="detail-value" th:text="${fechaInicio}">01/01/2024</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">📅 Fecha de Fin:</span>
+                    <span class="detail-value" th:text="${fechaFin}">05/01/2024</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">📍 Ubicación:</span>
+                    <span class="detail-value" th:text="${ubicacion}">Ciudad, País</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">👥 Cantidad de Personas:</span>
+                    <span class="detail-value" th:text="${cantidadPersonas}">2</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">🗓️ Fecha de Reserva:</span>
+                    <span class="detail-value" th:text="${fechaReserva}">19/11/2024</span>
+                </div>
+            </div>
+            
+            <!-- Price -->
+            <div class="price-total">
+                <div class="price-label">TOTAL PAGADO</div>
+                <div class="price-amount">
+                    <span th:text="${moneda}">ARS</span>
+                    <span th:text="${precioTotal}">0.00</span>
+                </div>
+            </div>
+            
+            <!-- Payment Info -->
+            <div class="details-section">
+                <h3 style="color: #1f2937; margin-bottom: 15px;">💳 Información del Pago</h3>
+                
+                <div class="detail-row">
+                    <span class="detail-label">ID de Pago:</span>
+                    <span class="detail-value" th:text="${paymentId}">123456789</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Método de Pago:</span>
+                    <span class="detail-value" th:text="${metodoPago}">Visa</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Fecha de Pago:</span>
+                    <span class="detail-value" th:text="${fechaPago}">19/11/2024</span>
+                </div>
+            </div>
+            
+            <!-- Important Info -->
+            <div class="info-box">
+                <div class="info-box-title">📌 Información Importante</div>
+                <div class="info-box-content">
+                    <ul style="margin: 5px 0; padding-left: 20px;">
+                        <li>Guarda este email como comprobante de tu reserva</li>
+                        <li>Recuerda llegar 15 minutos antes de la hora de inicio</li>
+                        <li>Para cualquier cambio o cancelación, contacta nuestro soporte</li>
+                        <li>Se recomienda llevar ropa cómoda y protección solar</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Observations (if any) -->
+            <div th:if="${observaciones != null and observaciones != ''}" class="info-box">
+                <div class="info-box-title">📝 Observaciones</div>
+                <div class="info-box-content" th:text="${observaciones}">
+                    Observaciones adicionales
+                </div>
+            </div>
+            
+            <!-- QR Code Section -->
+            <div th:if="${qrCodeBase64 != null}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; padding: 25px; margin: 30px 0; text-align: center; color: white;">
+                <h3 style="color: white; margin: 0 0 10px;">🔲 Tu Código QR</h3>
+                <p style="margin: 0 0 20px; font-size: 14px; opacity: 0.9;">
+                    Muestra este código al operador el día de la experiencia
+                </p>
+                
+                <div style="background: white; border-radius: 8px; padding: 20px; display: inline-block;">
+                    <img th:src="${qrCodeBase64}" alt="QR Code" style="width: 250px; height: 250px; display: block;"/>
+                </div>
+                
+                <p style="margin: 15px 0 5px; font-size: 14px; font-weight: 600;">
+                    Token: <span th:text="${tokenQr}" style="font-family: 'Courier New', monospace; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 4px;">R27-A3F9K2M8</span>
+                </p>
+                
+                <p style="margin: 15px 0 0; font-size: 12px; opacity: 0.9;">
+                    💡 Guarda una captura de pantalla de este QR por si no tienes conexión
+                </p>
+            </div>
+            
+            <!-- Call to Action -->
+            <div style="text-align: center; margin: 30px 0;">
+                <p style="margin-bottom: 15px;">¿Necesitas ayuda o tienes alguna pregunta?</p>
+                <a href="mailto:soporte@turisnow.com" class="button">
+                    📧 Contactar Soporte
+                </a>
+            </div>
+            
+            <p style="text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px;">
+                ¡Que disfrutes tu experiencia! 🌟
+            </p>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>TurisNow</strong> - Tu próxima aventura comienza aquí</p>
+            <p>
+                <a href="https://turisnow.com">Sitio Web</a> • 
+                <a href="mailto:info@turisnow.com">Contacto</a> • 
+                <a href="https://turisnow.com/terminos">Términos y Condiciones</a>
+            </p>
+            <p style="margin-top: 15px; font-size: 11px;">
+                Este es un email automático, por favor no respondas a este mensaje.<br>
+                Para consultas, escribe a soporte@turisnow.com
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+
