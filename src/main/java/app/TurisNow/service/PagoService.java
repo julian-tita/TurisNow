@@ -500,19 +500,45 @@ public class PagoService {
             }
             
             // Determinar si es pago del carrito o pago directo
-            Carrito carrito = carritoRepository.findByUsuarioId(pago.getUsuario().getId())
-                    .orElse(null);
+            // Un pago es del carrito si el external_reference contiene comas (múltiples salidas)
+            // o si el carrito tiene items activos
+            String externalRef = pago.getExternalReference();
+            boolean esMultiplesSalidas = externalRef != null && externalRef.contains(",");
             
             List<Reserva> reservasCreadas = new ArrayList<>();
             
-            if (carrito != null) {
-                // CASO 1: Pago desde CARRITO
-                logger.info("🛒 Procesando pago del carrito");
-                reservasCreadas = procesarPagoDesdeCarrito(pago, carrito);
+            // Si el external_reference tiene múltiples IDs, es definitivamente del carrito
+            if (esMultiplesSalidas) {
+                logger.info("🛒 Detectado pago del carrito (múltiples salidas en external_reference: {})", externalRef);
+                Carrito carrito = carritoRepository.findByUsuarioId(pago.getUsuario().getId())
+                        .orElse(null);
+                if (carrito != null) {
+                    reservasCreadas = procesarPagoDesdeCarrito(pago, carrito);
+                } else {
+                    logger.error("❌ No se encontró el carrito para pago múltiple. Usuario: {}", pago.getUsuario().getId());
+                }
             } else {
-                // CASO 2: Pago DIRECTO (sin carrito)
-                logger.info("🎯 Procesando pago directo (sin carrito)");
-                reservasCreadas = procesarPagoDirecto(pago);
+                // External reference con un solo ID - verificar si hay items en carrito
+                Carrito carrito = carritoRepository.findByUsuarioId(pago.getUsuario().getId())
+                        .orElse(null);
+                
+                if (carrito != null) {
+                    List<CarritoItem> items = carritoItemRepository.findByCarritoIdWithDetails(carrito.getId());
+                    
+                    if (!items.isEmpty()) {
+                        // Hay items en el carrito - es pago del carrito
+                        logger.info("🛒 Detectado pago del carrito ({} items encontrados)", items.size());
+                        reservasCreadas = procesarPagoDesdeCarrito(pago, carrito);
+                    } else {
+                        // Carrito vacío - es pago directo
+                        logger.info("🎯 Detectado pago directo (carrito vacío, external_reference: {})", externalRef);
+                        reservasCreadas = procesarPagoDirecto(pago);
+                    }
+                } else {
+                    // No hay carrito - definitivamente es pago directo
+                    logger.info("🎯 Detectado pago directo (sin carrito, external_reference: {})", externalRef);
+                    reservasCreadas = procesarPagoDirecto(pago);
+                }
             }
             
             logger.info("✅ Procesamiento de pago aprobado completado. {} reservas creadas", 
@@ -529,6 +555,8 @@ public class PagoService {
      */
     private List<Reserva> procesarPagoDesdeCarrito(Pago pago, Carrito carrito) {
         List<Reserva> reservasCreadas = new ArrayList<>();
+        logger.info("🛒 Iniciando procesamiento de pago desde carrito - Pago ID: {}, Usuario: {}", 
+            pago.getId(), pago.getUsuario().getUsername());
         
         try {
             // Obtener items del carrito
@@ -542,35 +570,51 @@ public class PagoService {
             logger.info("📦 Se encontraron {} items en el carrito", items.size());
             
             // Crear una reserva por cada item del carrito
-            for (CarritoItem item : items) {
+            for (int i = 0; i < items.size(); i++) {
+                CarritoItem item = items.get(i);
+                logger.info("🎫 Procesando item {}/{} - Salida: {}, Cantidad: {}", 
+                    i + 1, items.size(), item.getSalida().getId(), item.getCantidad());
+                
                 try {
                     ReservaRequest reservaRequest = new ReservaRequest();
                     reservaRequest.setSalidaId(item.getSalida().getId());
                     reservaRequest.setCantidadPersonas(item.getCantidad());
                     reservaRequest.setPrecioTotal(item.getSubtotal());
-                    reservaRequest.setObservaciones("Pago procesado del carrito - ID: " + pago.getId());
+                    reservaRequest.setObservaciones("Pago procesado del carrito - Pago ID: " + pago.getId());
+                    
+                    logger.info("📤 Llamando a reservaService.crearReserva()...");
                     
                     ReservaResponse reservaResponse = reservaService.crearReserva(
                             reservaRequest, 
                             pago.getUsuario().getId()
                     );
                     
+                    logger.info("📥 Respuesta de crearReserva: ID={}, Mensaje={}", 
+                        reservaResponse.getId(), reservaResponse.getMensaje());
+                    
                     if (reservaResponse.getId() != null) {
                         Reserva reserva = reservaRepository.findById(reservaResponse.getId())
-                                .orElseThrow();
+                                .orElseThrow(() -> new RuntimeException("Reserva no encontrada después de crearla: " + reservaResponse.getId()));
+                        
                         reserva.setPago(pago);
                         reserva.setEstado(Reserva.EstadoReserva.CONFIRMADA);
-                        reservaRepository.save(reserva);
+                        reserva = reservaRepository.save(reserva);
                         reservasCreadas.add(reserva);
                         
-                        logger.info("✅ Reserva creada: {} para salida: {}", reserva.getId(), item.getSalida().getId());
+                        logger.info("✅ Reserva {} creada y confirmada para salida: {}", 
+                            reserva.getId(), item.getSalida().getId());
+                    } else {
+                        logger.error("❌ No se pudo crear la reserva para salida {}: {}", 
+                            item.getSalida().getId(), reservaResponse.getMensaje());
                     }
                     
                 } catch (Exception e) {
-                    logger.error("❌ Error creando reserva para salida {}: {}", 
+                    logger.error("❌ Excepción al crear reserva para salida {}: {}", 
                             item.getSalida().getId(), e.getMessage(), e);
                 }
             }
+            
+            logger.info("📊 Resumen: Se crearon {} de {} reservas", reservasCreadas.size(), items.size());
             
             // Vaciar el carrito si se crearon reservas
             if (!reservasCreadas.isEmpty()) {
@@ -580,10 +624,12 @@ public class PagoService {
                 } catch (Exception e) {
                     logger.warn("⚠️ No se pudo vaciar el carrito (posiblemente ya fue vaciado): {}", e.getMessage());
                 }
+            } else {
+                logger.error("❌ NO SE CREÓ NINGUNA RESERVA. El carrito NO será vaciado.");
             }
             
         } catch (Exception e) {
-            logger.error("❌ Error procesando pago del carrito: {}", e.getMessage(), e);
+            logger.error("❌ Error crítico procesando pago del carrito: {}", e.getMessage(), e);
         }
         
         return reservasCreadas;
@@ -594,6 +640,8 @@ public class PagoService {
      */
     private List<Reserva> procesarPagoDirecto(Pago pago) {
         List<Reserva> reservasCreadas = new ArrayList<>();
+        logger.info("🎯 Iniciando procesamiento de pago directo - Pago ID: {}, Usuario: {}", 
+            pago.getId(), pago.getUsuario().getUsername());
         
         try {
             // El external_reference contiene el salidaId para pagos directos
@@ -604,12 +652,17 @@ public class PagoService {
                 return reservasCreadas;
             }
             
+            logger.info("🔍 External reference: {}", externalReference);
+            
             Long salidaId = Long.parseLong(externalReference);
             logger.info("📌 Creando reserva directa para salida ID: {}", salidaId);
             
             // Verificar que la salida existe
             Salida salida = salidaRepository.findById(salidaId)
                     .orElseThrow(() -> new RuntimeException("Salida no encontrada: " + salidaId));
+            
+            logger.info("✓ Salida encontrada: {} - Experiencia: {}", 
+                salida.getId(), salida.getExperiencia().getTitulo());
             
             // Calcular cantidad de personas desde el monto total y precio de la experiencia
             BigDecimal precioUnitario = salida.getExperiencia().getPrecio();
@@ -619,7 +672,7 @@ public class PagoService {
                 pago.getMontoTotal(), precioUnitario, cantidadPersonas);
             
             // Extraer observaciones de datos_adicionales si existen
-            String observaciones = "Pago directo procesado - ID: " + pago.getId();
+            String observaciones = "Pago directo procesado - Pago ID: " + pago.getId();
             if (pago.getDatosAdicionales() != null && pago.getDatosAdicionales().contains("observaciones")) {
                 // Simple parsing si tiene observaciones en el JSON
                 observaciones = pago.getDatosAdicionales() + " - Pago ID: " + pago.getId();
@@ -632,29 +685,39 @@ public class PagoService {
             reservaRequest.setPrecioTotal(pago.getMontoTotal());
             reservaRequest.setObservaciones(observaciones);
             
+            logger.info("📤 Llamando a reservaService.crearReserva()...");
+            
             ReservaResponse reservaResponse = reservaService.crearReserva(
                     reservaRequest, 
                     pago.getUsuario().getId()
             );
             
+            logger.info("📥 Respuesta de crearReserva: ID={}, Mensaje={}", 
+                reservaResponse.getId(), reservaResponse.getMensaje());
+            
             if (reservaResponse.getId() != null) {
                 Reserva reserva = reservaRepository.findById(reservaResponse.getId())
-                        .orElseThrow();
+                        .orElseThrow(() -> new RuntimeException("Reserva no encontrada después de crearla: " + reservaResponse.getId()));
+                
                 reserva.setPago(pago);
                 reserva.setEstado(Reserva.EstadoReserva.CONFIRMADA);
-                reservaRepository.save(reserva);
+                reserva = reservaRepository.save(reserva);
                 reservasCreadas.add(reserva);
                 
-                logger.info("✅ Reserva directa creada: {} para salida: {} ({} personas)", 
+                logger.info("✅ Reserva directa {} creada y confirmada para salida: {} ({} personas)", 
                     reserva.getId(), salidaId, cantidadPersonas);
+            } else {
+                logger.error("❌ No se pudo crear la reserva directa para salida {}: {}", 
+                    salidaId, reservaResponse.getMensaje());
             }
             
         } catch (NumberFormatException e) {
-            logger.error("❌ Error parseando external_reference como salidaId: {}", pago.getExternalReference());
+            logger.error("❌ Error parseando external_reference '{}' como salidaId", pago.getExternalReference(), e);
         } catch (Exception e) {
-            logger.error("❌ Error creando reserva directa: {}", e.getMessage(), e);
+            logger.error("❌ Excepción al crear reserva directa: {}", e.getMessage(), e);
         }
         
+        logger.info("📊 Resumen pago directo: {} reserva(s) creada(s)", reservasCreadas.size());
         return reservasCreadas;
     }
     

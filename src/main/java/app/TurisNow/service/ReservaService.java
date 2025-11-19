@@ -8,6 +8,8 @@ import app.TurisNow.repository.ReservaRepository;
 import app.TurisNow.repository.SalidaRepository;
 import app.TurisNow.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,8 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class ReservaService {
     
+    private static final Logger logger = LoggerFactory.getLogger(ReservaService.class);
+    
     private final ReservaRepository reservaRepository;
     private final SalidaRepository salidaRepository;
     private final UsuarioRepository usuarioRepository;
@@ -33,34 +37,48 @@ public class ReservaService {
      */
     @Transactional
     public ReservaResponse crearReserva(ReservaRequest request, Long usuarioId) {
+        logger.info("🎫 Iniciando creación de reserva - Usuario: {}, Salida: {}, Cantidad: {}", 
+            usuarioId, request.getSalidaId(), request.getCantidadPersonas());
+        
         try {
             // Validar que la salida existe
             Salida salida = salidaRepository.findById(request.getSalidaId())
                 .orElseThrow(() -> new RuntimeException("Salida no encontrada con id: " + request.getSalidaId()));
             
+            logger.info("✓ Salida encontrada: {} - Capacidad disponible: {}", 
+                salida.getId(), salida.getCapacidadDisponible());
+            
             // Validar que el usuario existe
             Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + usuarioId));
             
+            logger.info("✓ Usuario encontrado: {} ({})", usuario.getId(), usuario.getUsername());
+            
             // Validar que la salida tiene capacidad disponible
             if (salida.getCapacidadDisponible() < request.getCantidadPersonas()) {
+                logger.warn("❌ Capacidad insuficiente. Disponible: {}, Solicitado: {}", 
+                    salida.getCapacidadDisponible(), request.getCantidadPersonas());
                 return new ReservaResponse("No hay suficiente capacidad disponible. Disponible: " + salida.getCapacidadDisponible());
             }
             
             // Validar que la salida no ha pasado
             if (salida.getFechaInicio().isBefore(LocalDateTime.now())) {
+                logger.warn("❌ Salida ya pasó. Fecha inicio: {}", salida.getFechaInicio());
                 return new ReservaResponse("No se puede reservar una salida que ya ha pasado");
             }
             
             // Verificar si el usuario ya tiene una reserva activa para esta salida
             Optional<Reserva> reservaExistente = reservaRepository.findReservaActivaByUsuarioAndSalida(usuarioId, request.getSalidaId());
             if (reservaExistente.isPresent()) {
+                logger.warn("❌ Usuario {} ya tiene reserva activa para salida {}: Reserva ID {}", 
+                    usuarioId, request.getSalidaId(), reservaExistente.get().getId());
                 return new ReservaResponse("Ya tienes una reserva activa para esta salida");
             }
             
             // Validar que el precio total sea correcto
             BigDecimal precioEsperado = salida.getExperiencia().getPrecio().multiply(BigDecimal.valueOf(request.getCantidadPersonas()));
             if (request.getPrecioTotal().compareTo(precioEsperado) != 0) {
+                logger.warn("❌ Precio incorrecto. Esperado: {}, Recibido: {}", precioEsperado, request.getPrecioTotal());
                 return new ReservaResponse("El precio total no coincide con el precio de la experiencia");
             }
             
@@ -76,14 +94,22 @@ public class ReservaService {
             // Guardar la reserva
             reserva = reservaRepository.save(reserva);
             
+            logger.info("✅ Reserva creada exitosamente: ID {}", reserva.getId());
+            
             // Actualizar la capacidad disponible de la salida
+            int capacidadAnterior = salida.getCapacidadDisponible();
             salida.setCapacidadDisponible(salida.getCapacidadDisponible() - request.getCantidadPersonas());
             salidaRepository.save(salida);
+            
+            logger.info("✅ Capacidad actualizada para salida {}: {} -> {}", 
+                salida.getId(), capacidadAnterior, salida.getCapacidadDisponible());
             
             // Mapear a response
             return mapearAResponse(reserva);
             
         } catch (Exception e) {
+            logger.error("❌ Error al crear reserva - Usuario: {}, Salida: {}", 
+                usuarioId, request.getSalidaId(), e);
             return new ReservaResponse("Error al crear la reserva: " + e.getMessage());
         }
     }
