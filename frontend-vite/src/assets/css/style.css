@@ -800,15 +800,14 @@ nav.navbar.scrolled .navbar-toggler .fa-bars {
 }
 
 .auth-form .form-control:focus {
-  border-color: #4A90E2;
-  box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+  border-color: #e1e5e9;
+  box-shadow: none;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #4A90E2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-  transform: translateY(-1px);
+  border-color: #e1e5e9;
+  box-shadow: none;
 }
 
 .form-group input::placeholder {
@@ -1963,8 +1962,8 @@ nav.navbar.scrolled .navbar-toggler .fa-bars {
 
 .search-box input:focus {
   outline: none;
-  border-color: #4A90E2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  border-color: #e1e5e9;
+  box-shadow: none;
 }
 
 .filter-group {
@@ -1985,8 +1984,8 @@ nav.navbar.scrolled .navbar-toggler .fa-bars {
 
 .form-select:focus {
   outline: none;
-  border-color: #4A90E2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  border-color: #e1e5e9;
+  box-shadow: none;
 }
 
 /* Stats Row */
