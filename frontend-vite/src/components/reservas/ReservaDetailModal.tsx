@@ -1,19 +1,27 @@
 // TurisNow: Modal de detalle de reserva
 import React from 'react';
-import type { ReservaDetalleDTO } from '../../services/reservaService';
+import type { QRData, ReservaDetalleDTO } from '../../services/reservaService';
 
 interface ReservaDetailModalProps {
   reserva: ReservaDetalleDTO | null;
   onClose: () => void;
   onConfirmar?: (reservaId: number) => void;
   onCancelar?: (reservaId: number) => void;
+  qrData?: QRData | null;
+  qrLoading?: boolean;
+  qrError?: string | null;
+  onFetchQR?: (reservaId: number) => void;
 }
 
 const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
   reserva,
   onClose,
   onConfirmar,
-  onCancelar
+  onCancelar,
+  qrData,
+  qrLoading,
+  qrError,
+  onFetchQR
 }) => {
   if (!reserva) return null;
 
@@ -212,6 +220,61 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
                   )}
                 </div>
               </div>
+
+              {reserva.id && (
+                <div className="card mb-4">
+                  <div className="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h6 className="mb-0">
+                      <i className="fas fa-qrcode me-2"></i>
+                      Código QR de acceso
+                    </h6>
+                    {onFetchQR && (
+                      <button
+                        className="btn btn-sm btn-outline-light"
+                        onClick={() => onFetchQR(reserva.id)}
+                      >
+                        Actualizar
+                      </button>
+                    )}
+                  </div>
+                  <div className="card-body text-center">
+                    {qrLoading ? (
+                      <div className="py-3">
+                        <div className="spinner-border text-primary" role="status">
+                          <span className="visually-hidden">Cargando código QR...</span>
+                        </div>
+                      </div>
+                    ) : qrData ? (
+                      <>
+                        <img
+                          src={qrData.qrCodeBase64.startsWith('data:')
+                            ? qrData.qrCodeBase64
+                            : `data:image/png;base64,${qrData.qrCodeBase64}`}
+                          alt={`Código QR reserva ${reserva.id}`}
+                          style={{ maxWidth: '240px', width: '100%' }}
+                        />
+                        <div className="mt-3">
+                          <h6 className="text-muted mb-1">Token de verificación</h6>
+                          <code className="d-inline-block px-3 py-2 bg-light rounded">
+                            {qrData.tokenQr}
+                          </code>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="alert alert-light border" role="alert">
+                        No pudimos cargar el código QR automáticamente. Usa el botón "Actualizar" para intentarlo nuevamente.
+                      </div>
+                    )}
+
+                    {qrError && (
+                      <div className="alert alert-warning mt-3 mb-0" role="alert">
+                        <i className="fas fa-exclamation-triangle me-1"></i>
+                        {qrError}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Información del Usuario */}
               <div className="card mb-4">

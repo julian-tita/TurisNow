@@ -4,27 +4,22 @@ import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import UsersManagement from '../admin/UsersManagement';
 import ExperiencesManagement from '../admin/ExperiencesManagement';
-import adminService from '../../services/adminService';
+import ReservasManagement from '../admin/ReservasManagement';
+import kpiService from '../../services/kpiService';
+import type { Period, KpiBackendResponse } from '../../services/kpiService';
+import PeriodSelector from '../common/PeriodSelector';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Legend
+} from 'recharts';
 
-// Interfaz local para estadísticas
-interface AdminEstadisticas {
-  totalUsuarios: number;
-  totalExperiencias: number;
-  totalReservas: number;
-  reservasPendientes: number;
-  reservasConfirmadas: number;
-  reservasCanceladas: number;
-  reservasCompletadas: number;
-  ingresosTotales: number;
-  ingresosHoy: number;
-  ingresosMesActual: number;
-  reservasHoy: number;
-  reservasMesActual: number;
-  experienciasActivas: number;
-  usuariosActivos: number;
-}
-
-type MenuOption = 'overview' | 'users' | 'experiences';
+type MenuOption = 'overview' | 'users' | 'experiences' | 'salidas' | 'reservas';
 
 const DashboardAdmin: React.FC = () => {
   const { user } = useAuth();
@@ -72,6 +67,22 @@ const DashboardAdmin: React.FC = () => {
             <span>Experiencias</span>
           </button>
 
+          <button
+            className={`nav-item ${activeMenu === 'salidas' ? 'active' : ''}`}
+            onClick={() => setActiveMenu('salidas')}
+          >
+            <i className="fas fa-calendar-alt"></i>
+            <span>Salidas</span>
+          </button>
+
+          <button
+            className={`nav-item ${activeMenu === 'reservas' ? 'active' : ''}`}
+            onClick={() => setActiveMenu('reservas')}
+          >
+            <i className="fas fa-calendar-check"></i>
+            <span>Reservas</span>
+          </button>
+
           <div className="sidebar-divider"></div>
 
           <button className="nav-item">
@@ -88,6 +99,8 @@ const DashboardAdmin: React.FC = () => {
             {activeMenu === 'overview' && 'Dashboard General'}
             {activeMenu === 'users' && 'Gestión de Usuarios'}
             {activeMenu === 'experiences' && 'Gestión de Experiencias'}
+            {activeMenu === 'salidas' && 'Gestión de Salidas'}
+            {activeMenu === 'reservas' && 'Gestión de Reservas'}
           </h1>
           <div className="breadcrumb">
             <span>Dashboard</span>
@@ -96,6 +109,8 @@ const DashboardAdmin: React.FC = () => {
               {activeMenu === 'overview' && 'Home'}
               {activeMenu === 'users' && 'Usuarios'}
               {activeMenu === 'experiences' && 'Experiencias'}
+              {activeMenu === 'salidas' && 'Salidas'}
+              {activeMenu === 'reservas' && 'Reservas'}
             </span>
           </div>
         </div>
@@ -104,250 +119,218 @@ const DashboardAdmin: React.FC = () => {
           {activeMenu === 'overview' && <OverviewSection />}
           {activeMenu === 'users' && <UsersManagement />}
           {activeMenu === 'experiences' && <ExperiencesManagement />}
+          {activeMenu === 'salidas' && (
+            <div className="alert alert-info m-4">
+              <i className="fas fa-info-circle me-2"></i>
+              Las salidas se gestionan desde cada experiencia individual.
+              Ve a "Experiencias" y edita una experiencia para gestionar sus salidas.
+            </div>
+          )}
+          {activeMenu === 'reservas' && <ReservasManagement />}
         </div>
       </main>
     </div>
   );
 };
 
-// Componente de Overview con KPIs reales
+// Componente de Overview con KPIs nuevos y gráfico
 const OverviewSection: React.FC = () => {
-  const [estadisticas, setEstadisticas] = useState<AdminEstadisticas | null>(null);
+  const [kpis, setKpis] = useState<KpiBackendResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<Period>('month');
 
   useEffect(() => {
-    const cargarEstadisticas = async () => {
-      try {
-        setLoading(true);
-        const data = await adminService.obtenerEstadisticas();
-        setEstadisticas(data);
-      } catch (error: any) {
-        console.error('Error al cargar estadísticas:', error);
-        toast.error('Error al cargar estadísticas del sistema');
-      } finally {
-        setLoading(false);
-      }
-    };
+    cargarKpis();
+  }, [selectedPeriod]);
 
-    cargarEstadisticas();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Cargando estadísticas...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!estadisticas) {
-    return (
-      <div className="alert alert-warning">
-        <i className="fas fa-exclamation-triangle me-2"></i>
-        No se pudieron cargar las estadísticas
-      </div>
-    );
-  }
-
-  const calcularPorcentaje = (actual: number, total: number) => {
-    if (total === 0) return 0;
-    return ((actual / total) * 100).toFixed(1);
+  const cargarKpis = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await kpiService.fetchKpis(selectedPeriod);
+      setKpis(data);
+    } catch (err: any) {
+      console.error('Error al cargar KPIs:', err);
+      setError('No se pudieron cargar los KPIs');
+      toast.error('Error al cargar estadísticas');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handlePeriodChange = (period: Period) => {
+    setSelectedPeriod(period);
+  };
+
+  const handleRetry = () => {
+    cargarKpis();
+  };
+
+  if (error) {
+    return (
+      <div className="alert alert-danger d-flex justify-content-between align-items-center">
+        <div>
+          <i className="fas fa-exclamation-triangle me-2"></i>
+          No se pudieron cargar los KPIs
+        </div>
+        <button className="btn btn-sm btn-outline-danger" onClick={handleRetry}>
+          <i className="fas fa-sync-alt me-1"></i>
+          Reintentar
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="overview-section">
-      {/* KPIs Cards con datos reales */}
+      {/* Selector de Período */}
+      <div className="mb-4">
+        <PeriodSelector 
+          selectedPeriod={selectedPeriod} 
+          onPeriodChange={handlePeriodChange}
+        />
+      </div>
+
+      {/* KPIs Grid */}
       <div className="kpi-grid">
-        {/* Ingresos del día */}
-        <div className="kpi-card">
-          <div className="kpi-icon money">
-            <i className="fas fa-dollar-sign"></i>
-          </div>
-          <div className="kpi-content">
-            <h3>Ingresos Hoy</h3>
-            <div className="kpi-value">{adminService.formatearPrecio(estadisticas.ingresosHoy)}</div>
-            <div className="kpi-change positive">
-              <i className="fas fa-arrow-up"></i>
-              {calcularPorcentaje(estadisticas.ingresosHoy, estadisticas.ingresosMesActual)}% del mes
+        {loading ? (
+          // Skeleton loaders
+          <>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="kpi-card loading">
+                <div className="kpi-icon skeleton"></div>
+                <div className="kpi-content">
+                  <div className="skeleton-text mb-2"></div>
+                  <div className="skeleton-text large mb-2"></div>
+                  <div className="skeleton-text small"></div>
+                </div>
+              </div>
+            ))}
+          </>
+        ) : kpis ? (
+          <>
+            {/* KPI 1: Ingresos Totales */}
+            <div className="kpi-card" role="button" tabIndex={0}>
+              <div className="kpi-icon money">
+                <i className="fas fa-dollar-sign"></i>
+              </div>
+              <div className="kpi-content">
+                <h3>{kpis.metricas.ingresosTotales.nombre}</h3>
+                <div className="kpi-value">
+                  {kpiService.formatearPrecio(kpis.metricas.ingresosTotales.valor)}
+                </div>
+                <div className={`kpi-change ${kpis.metricas.ingresosTotales.tendencia === 'up' ? 'positive' : kpis.metricas.ingresosTotales.tendencia === 'down' ? 'negative' : 'neutral'}`}>
+                  {kpis.metricas.ingresosTotales.tendencia === 'up' && <i className="fas fa-arrow-up"></i>}
+                  {kpis.metricas.ingresosTotales.tendencia === 'down' && <i className="fas fa-arrow-down"></i>}
+                  {kpiService.mapVariacion(kpis.metricas.ingresosTotales.variacion / 100).text}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Reservas totales */}
-        <div className="kpi-card">
-          <div className="kpi-icon users">
-            <i className="fas fa-calendar-check"></i>
-          </div>
-          <div className="kpi-content">
-            <h3>Total Reservas</h3>
-            <div className="kpi-value">{estadisticas.totalReservas.toLocaleString()}</div>
-            <div className="kpi-change positive">
-              <i className="fas fa-arrow-up"></i>
-              {estadisticas.reservasHoy} hoy
+            {/* KPI 2: Reservas Activas */}
+            <div className="kpi-card" role="button" tabIndex={0}>
+              <div className="kpi-icon users">
+                <i className="fas fa-calendar-check"></i>
+              </div>
+              <div className="kpi-content">
+                <h3>{kpis.metricas.reservasActivas.nombre}</h3>
+                <div className="kpi-value">
+                  {Math.round(kpis.metricas.reservasActivas.valor).toLocaleString()}
+                </div>
+                <div className={`kpi-change ${kpis.metricas.reservasActivas.tendencia === 'up' ? 'positive' : kpis.metricas.reservasActivas.tendencia === 'down' ? 'negative' : 'neutral'}`}>
+                  {kpis.metricas.reservasActivas.tendencia === 'up' && <i className="fas fa-arrow-up"></i>}
+                  {kpis.metricas.reservasActivas.tendencia === 'down' && <i className="fas fa-arrow-down"></i>}
+                  {kpiService.mapVariacion(kpis.metricas.reservasActivas.variacion / 100).text}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Usuarios activos */}
-        <div className="kpi-card">
-          <div className="kpi-icon clients">
-            <i className="fas fa-user-plus"></i>
-          </div>
-          <div className="kpi-content">
-            <h3>Usuarios Activos</h3>
-            <div className="kpi-value">{estadisticas.usuariosActivos.toLocaleString()}</div>
-            <div className="kpi-change positive">
-              <i className="fas fa-arrow-up"></i>
-              {calcularPorcentaje(estadisticas.usuariosActivos, estadisticas.totalUsuarios)}% del total
+            {/* KPI 3: Nuevos Usuarios */}
+            <div className="kpi-card" role="button" tabIndex={0}>
+              <div className="kpi-icon clients">
+                <i className="fas fa-user-plus"></i>
+              </div>
+              <div className="kpi-content">
+                <h3>{kpis.metricas.nuevosUsuarios.nombre}</h3>
+                <div className="kpi-value">
+                  {Math.round(kpis.metricas.nuevosUsuarios.valor).toLocaleString()}
+                </div>
+                <div className={`kpi-change ${kpis.metricas.nuevosUsuarios.tendencia === 'up' ? 'positive' : kpis.metricas.nuevosUsuarios.tendencia === 'down' ? 'negative' : 'neutral'}`}>
+                  {kpis.metricas.nuevosUsuarios.tendencia === 'up' && <i className="fas fa-arrow-up"></i>}
+                  {kpis.metricas.nuevosUsuarios.tendencia === 'down' && <i className="fas fa-arrow-down"></i>}
+                  {kpiService.mapVariacion(kpis.metricas.nuevosUsuarios.variacion / 100).text}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Experiencias activas */}
-        <div className="kpi-card">
-          <div className="kpi-icon sales">
-            <i className="fas fa-map-marked-alt"></i>
-          </div>
-          <div className="kpi-content">
-            <h3>Experiencias Activas</h3>
-            <div className="kpi-value">{estadisticas.experienciasActivas}</div>
-            <div className="kpi-change positive">
-              <i className="fas fa-arrow-up"></i>
-              {calcularPorcentaje(estadisticas.experienciasActivas, estadisticas.totalExperiencias)}% del total
+            {/* KPI 4: Tasa de Conversión */}
+            <div className="kpi-card" role="button" tabIndex={0}>
+              <div className="kpi-icon conversion">
+                <i className="fas fa-chart-pie"></i>
+              </div>
+              <div className="kpi-content">
+                <h3>{kpis.metricas.tasaConversion.nombre}</h3>
+                <div className="kpi-value">
+                  {kpis.metricas.tasaConversion.valor.toFixed(1)}%
+                </div>
+                <div className={`kpi-change ${kpis.metricas.tasaConversion.tendencia === 'up' ? 'positive' : kpis.metricas.tasaConversion.tendencia === 'down' ? 'negative' : 'neutral'}`}>
+                  {kpis.metricas.tasaConversion.tendencia === 'up' && <i className="fas fa-arrow-up"></i>}
+                  {kpis.metricas.tasaConversion.tendencia === 'down' && <i className="fas fa-arrow-down"></i>}
+                  {kpiService.mapVariacion(kpis.metricas.tasaConversion.variacion / 100).text}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        ) : null}
       </div>
 
-      {/* Cards de Estado de Reservas */}
-      <div className="row mt-4 g-3">
-        <div className="col-md-3">
-          <div className="card border-warning">
-            <div className="card-body text-center">
-              <i className="fas fa-clock fa-2x text-warning mb-2"></i>
-              <h5 className="card-title">Pendientes</h5>
-              <h2 className="text-warning mb-0">{estadisticas.reservasPendientes}</h2>
-              <small className="text-muted">Requieren atención</small>
-            </div>
+      {/* Gráfico de Métricas */}
+      {!loading && kpis && (
+        <div className="chart-container mt-5">
+          <div className="chart-header">
+            <h4>
+              <i className="fas fa-chart-line me-2"></i>
+              Tendencias del período
+            </h4>
           </div>
-        </div>
-        
-        <div className="col-md-3">
-          <div className="card border-success">
-            <div className="card-body text-center">
-              <i className="fas fa-check-circle fa-2x text-success mb-2"></i>
-              <h5 className="card-title">Confirmadas</h5>
-              <h2 className="text-success mb-0">{estadisticas.reservasConfirmadas}</h2>
-              <small className="text-muted">Próximas salidas</small>
-            </div>
-          </div>
-        </div>
-        
-        <div className="col-md-3">
-          <div className="card border-info">
-            <div className="card-body text-center">
-              <i className="fas fa-flag-checkered fa-2x text-info mb-2"></i>
-              <h5 className="card-title">Completadas</h5>
-              <h2 className="text-info mb-0">{estadisticas.reservasCompletadas}</h2>
-              <small className="text-muted">Este mes</small>
-            </div>
-          </div>
-        </div>
-        
-        <div className="col-md-3">
-          <div className="card border-danger">
-            <div className="card-body text-center">
-              <i className="fas fa-times-circle fa-2x text-danger mb-2"></i>
-              <h5 className="card-title">Canceladas</h5>
-              <h2 className="text-danger mb-0">{estadisticas.reservasCanceladas}</h2>
-              <small className="text-muted">Este mes</small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Resumen Financiero */}
-      <div className="row mt-4">
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-header bg-primary text-white">
-              <h5 className="mb-0">
-                <i className="fas fa-chart-line me-2"></i>
-                Resumen Financiero
-              </h5>
-            </div>
-            <div className="card-body">
-              <div className="row">
-                <div className="col-6 border-end">
-                  <p className="text-muted mb-1">Ingresos Totales</p>
-                  <h3 className="mb-0">{adminService.formatearPrecio(estadisticas.ingresosTotales)}</h3>
-                </div>
-                <div className="col-6">
-                  <p className="text-muted mb-1">Ingresos Este Mes</p>
-                  <h3 className="mb-0">{adminService.formatearPrecio(estadisticas.ingresosMesActual)}</h3>
-                </div>
+          <div className="chart-body">
+            {kpis.metricas.ingresosTotales.datos && kpis.metricas.ingresosTotales.datos.length > 0 ? (
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={kpis.metricas.ingresosTotales.datos}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="fecha" 
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => kpiService.formatearPrecio(value)}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="valor" 
+                    name="Ingresos"
+                    stroke="#667eea" 
+                    strokeWidth={2}
+                    dot={{ fill: '#667eea', r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-center py-5 text-muted">
+                <i className="fas fa-chart-line fa-3x mb-3 opacity-50"></i>
+                <p>No hay datos para el período seleccionado</p>
               </div>
-              <div className="progress mt-3" style={{ height: '10px' }}>
-                <div 
-                  className="progress-bar bg-success" 
-                  role="progressbar" 
-                  style={{ width: `${calcularPorcentaje(estadisticas.ingresosMesActual, estadisticas.ingresosTotales)}%` }}
-                  aria-valuenow={Number(calcularPorcentaje(estadisticas.ingresosMesActual, estadisticas.ingresosTotales))}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                >
-                  {calcularPorcentaje(estadisticas.ingresosMesActual, estadisticas.ingresosTotales)}%
-                </div>
-              </div>
-              <p className="text-muted mt-2 mb-0">
-                <i className="fas fa-info-circle me-1"></i>
-                {calcularPorcentaje(estadisticas.ingresosMesActual, estadisticas.ingresosTotales)}% de los ingresos totales fueron este mes
-              </p>
-            </div>
+            )}
           </div>
         </div>
-
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-header bg-success text-white">
-              <h5 className="mb-0">
-                <i className="fas fa-users me-2"></i>
-                Estadísticas de Usuarios
-              </h5>
-            </div>
-            <div className="card-body">
-              <div className="row">
-                <div className="col-6 border-end">
-                  <p className="text-muted mb-1">Total Usuarios</p>
-                  <h3 className="mb-0">{estadisticas.totalUsuarios.toLocaleString()}</h3>
-                </div>
-                <div className="col-6">
-                  <p className="text-muted mb-1">Usuarios Activos</p>
-                  <h3 className="mb-0">{estadisticas.usuariosActivos.toLocaleString()}</h3>
-                </div>
-              </div>
-              <div className="progress mt-3" style={{ height: '10px' }}>
-                <div 
-                  className="progress-bar bg-info" 
-                  role="progressbar" 
-                  style={{ width: `${calcularPorcentaje(estadisticas.usuariosActivos, estadisticas.totalUsuarios)}%` }}
-                  aria-valuenow={Number(calcularPorcentaje(estadisticas.usuariosActivos, estadisticas.totalUsuarios))}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                >
-                  {calcularPorcentaje(estadisticas.usuariosActivos, estadisticas.totalUsuarios)}%
-                </div>
-              </div>
-              <p className="text-muted mt-2 mb-0">
-                <i className="fas fa-info-circle me-1"></i>
-                {calcularPorcentaje(estadisticas.usuariosActivos, estadisticas.totalUsuarios)}% de los usuarios están activos
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

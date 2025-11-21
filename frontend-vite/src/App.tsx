@@ -22,6 +22,7 @@ import PerfilUsuario from './pages/PerfilUsuario';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentFailurePage from './pages/PaymentFailurePage';
 import PaymentPendingPage from './pages/PaymentPendingPage';
+import Itinerario from './pages/Itinerario';
 
 import './assets/css/style.css';
 
@@ -99,6 +100,16 @@ function App() {
                 }
               />
 
+              {/* Itinerario AI - Protected Route */}
+              <Route
+                path="/itinerario"
+                element={
+                  <ProtectedRoute>
+                    <Itinerario />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Likes and Cart */}
               <Route path="/likes" element={<LikePage />} />
               <Route path="/cart" element={<CartPage />} />
@@ -113,6 +124,7 @@ function App() {
             <Route path="/register" element={<Register />} />
 
             {/* Protegida - Admin */}
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route
               path="/admin/dashboard"
               element={

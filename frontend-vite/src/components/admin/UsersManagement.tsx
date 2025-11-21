@@ -1,39 +1,31 @@
 import { useState, useEffect } from 'react';
-import { userService, type UserDTO } from '../../services/userService';
+import { userService, type UsuarioAdminResponse } from '../../services/userService';
+import toast from 'react-hot-toast';
 
 const UsersManagement: React.FC = () => {
-  const [users, setUsers] = useState<UserDTO[]>([]);
+  const [users, setUsers] = useState<UsuarioAdminResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<'ALL' | 'USER' | 'ADMIN'>('ALL');
   
-  // Paginación
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [pageSize] = useState(10);
+  const pageSize = 10;
 
-  // Helper para obtener el nombre completo
-  const getFullName = (user: UserDTO): string => {
-    if (user.nombreCompleto) return user.nombreCompleto;
+  const getFullName = (user: UsuarioAdminResponse): string => {
     if (user.nombre && user.apellido) return `${user.nombre} ${user.apellido}`;
     if (user.nombre) return user.nombre;
     if (user.apellido) return user.apellido;
     return user.username;
   };
 
-  // Cargar usuarios desde el backend
   const loadUsers = async () => {
     try {
       setLoading(true);
-      setError(null);
-      
       const response = await userService.getAllUsers({
         page: currentPage,
         size: pageSize,
-        sort: 'id',
-        direction: 'ASC',
         rol: filterRole,
         search: searchTerm.trim() || undefined
       });
@@ -43,27 +35,24 @@ const UsersManagement: React.FC = () => {
       setTotalElements(response.totalElements);
     } catch (err: any) {
       console.error('Error cargando usuarios:', err);
-      setError(err.message || 'Error al cargar los usuarios');
+      toast.error(err.message || 'Error al cargar los usuarios');
     } finally {
       setLoading(false);
     }
   };
 
-  // Cargar usuarios al montar y cuando cambien los filtros
   useEffect(() => {
     loadUsers();
   }, [currentPage, filterRole]);
 
-  // Búsqueda con debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       if (currentPage === 0) {
         loadUsers();
       } else {
-        setCurrentPage(0); // Trigger loadUsers via page change
+        setCurrentPage(0);
       }
     }, 500);
-    
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
@@ -71,31 +60,25 @@ const UsersManagement: React.FC = () => {
     try {
       const updatedUser = await userService.toggleUserStatus(userId);
       setUsers(users.map(u => u.id === userId ? updatedUser : u));
+      toast.success(`Usuario ${updatedUser.activo ? 'activado' : 'desactivado'} correctamente`);
     } catch (err: any) {
-      alert(err.message || 'Error al cambiar el estado del usuario');
-    }
-  };
-
-  const handleDeleteUser = async (userId: number) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
-      return;
-    }
-    
-    try {
-      await userService.deleteUser(userId);
-      // Recargar la lista
-      loadUsers();
-    } catch (err: any) {
-      alert(err.message || 'Error al eliminar el usuario');
+      toast.error(err.message || 'Error al cambiar el estado del usuario');
     }
   };
 
   const handleChangeRole = async (userId: number, newRole: 'USER' | 'ADMIN') => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+    
+    if (!window.confirm(`¿Cambiar rol de ${getFullName(user)} a ${newRole}?`)) return;
+
     try {
       const updatedUser = await userService.changeUserRole(userId, newRole);
       setUsers(users.map(u => u.id === userId ? updatedUser : u));
+      toast.success(`Rol actualizado a ${newRole}`);
     } catch (err: any) {
-      alert(err.message || 'Error al cambiar el rol del usuario');
+      toast.error(err.message || 'Error al cambiar el rol del usuario');
+      loadUsers();
     }
   };
 
@@ -108,21 +91,8 @@ const UsersManagement: React.FC = () => {
     );
   }
 
-  if (error && users.length === 0) {
-    return (
-      <div className="alert alert-danger m-4">
-        <i className="fas fa-exclamation-triangle me-2"></i>
-        {error}
-        <button className="btn btn-sm btn-outline-danger ms-3" onClick={loadUsers}>
-          <i className="fas fa-redo me-1"></i> Reintentar
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="management-container">
-      {/* Header con búsqueda y filtros */}
       <div className="management-header">
         <div className="search-box">
           <i className="fas fa-search"></i>
@@ -144,15 +114,9 @@ const UsersManagement: React.FC = () => {
             <option value="USER">Usuarios</option>
             <option value="ADMIN">Administradores</option>
           </select>
-
-          <button className="btn btn-primary" disabled>
-            <i className="fas fa-user-plus me-2"></i>
-            Nuevo Usuario
-          </button>
         </div>
       </div>
 
-      {/* Estadísticas rápidas */}
       <div className="stats-row">
         <div className="stat-card">
           <div className="stat-icon users">
@@ -195,7 +159,6 @@ const UsersManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabla de usuarios */}
       <div className="management-table-container">
         {loading && (
           <div className="text-center py-4">
@@ -227,77 +190,61 @@ const UsersManagement: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                users.map((user: UserDTO) => {
+                users.map(user => {
                   const fullName = getFullName(user);
                   const fechaRegistro = user.fechaCreacion 
                     ? new Date(user.fechaCreacion).toLocaleDateString('es-AR')
                     : 'N/A';
                     
                   return (
-                  <tr key={user.id}>
-                    <td>{user.id}</td>
-                    <td>
-                      <div className="user-cell">
-                        <div className="user-avatar">
-                          {fullName.charAt(0).toUpperCase()}
+                    <tr key={user.id}>
+                      <td>{user.id}</td>
+                      <td>
+                        <div className="user-cell">
+                          <div className="user-avatar">
+                            {fullName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="user-info">
+                            <span className="user-name">{fullName}</span>
+                            <span className="user-username">@{user.username}</span>
+                            {user.totalReservas > 0 && (
+                              <span className="user-stats">
+                                {user.totalReservas} reservas • {user.reservasActivas} activas
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <div className="user-info">
-                          <span className="user-name">{fullName}</span>
-                          <span className="user-username">@{user.username}</span>
+                      </td>
+                      <td>{user.email}</td>
+                      <td>
+                        <select
+                          className={`role-badge ${user.rol?.toLowerCase()}`}
+                          value={user.rol}
+                          onChange={(e) => handleChangeRole(user.id, e.target.value as 'USER' | 'ADMIN')}
+                        >
+                          <option value="USER">USER</option>
+                          <option value="ADMIN">ADMIN</option>
+                        </select>
+                      </td>
+                      <td>{fechaRegistro}</td>
+                      <td>
+                        <span className={`status-badge ${user.activo ? 'active' : 'inactive'}`}>
+                          {user.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            className={`btn-icon ${user.activo ? 'btn-pause' : 'btn-play'}`}
+                            title={user.activo ? 'Desactivar' : 'Activar'}
+                            onClick={() => handleToggleStatus(user.id)}
+                          >
+                            <i className={`fas fa-${user.activo ? 'pause' : 'play'}`}></i>
+                          </button>
                         </div>
-                      </div>
-                    </td>
-                    <td>{user.email}</td>
-                    <td>
-                      <select
-                        className={`role-badge ${user.rol?.toLowerCase()}`}
-                        value={user.rol}
-                        onChange={(e) => handleChangeRole(user.id, e.target.value as 'USER' | 'ADMIN')}
-                      >
-                        <option value="USER">USER</option>
-                        <option value="ADMIN">ADMIN</option>
-                      </select>
-                    </td>
-                    <td>{fechaRegistro}</td>
-                    <td>
-                      <span className={`status-badge ${user.activo ? 'active' : 'inactive'}`}>
-                        {user.activo ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn-icon btn-view"
-                          title="Ver detalles"
-                          disabled
-                        >
-                          <i className="fas fa-eye"></i>
-                        </button>
-                        <button
-                          className="btn-icon btn-edit"
-                          title="Editar"
-                          disabled
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          className={`btn-icon ${user.activo ? 'btn-pause' : 'btn-play'}`}
-                          title={user.activo ? 'Desactivar' : 'Activar'}
-                          onClick={() => handleToggleStatus(user.id)}
-                        >
-                          <i className={`fas fa-${user.activo ? 'pause' : 'play'}`}></i>
-                        </button>
-                        <button
-                          className="btn-icon btn-delete"
-                          title="Eliminar"
-                          onClick={() => handleDeleteUser(user.id)}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
+                      </td>
+                    </tr>
+                  );
                 })
               )}
             </tbody>
@@ -305,7 +252,6 @@ const UsersManagement: React.FC = () => {
         )}
       </div>
 
-      {/* Paginación funcional */}
       {totalPages > 1 && (
         <div className="pagination">
           <button 
@@ -338,6 +284,10 @@ const UsersManagement: React.FC = () => {
           >
             <i className="fas fa-chevron-right"></i>
           </button>
+          
+          <span className="pagination-info">
+            Página {currentPage + 1} de {totalPages} ({totalElements} usuarios)
+          </span>
         </div>
       )}
     </div>

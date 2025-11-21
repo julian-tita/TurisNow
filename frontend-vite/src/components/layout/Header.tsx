@@ -113,6 +113,12 @@ const Header = () => {
                   <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                     <li><Link to="/perfil" className="dropdown-item">Mi Perfil</Link></li>
                     <li><Link to="/mis-reservas" className="dropdown-item">Mis Reservas</Link></li>
+                    {user?.rol === 'ADMIN' && (
+                      <>
+                        <li><hr className="dropdown-divider" /></li>
+                        <li><Link to="/admin" className="dropdown-item">Dashboard Admin</Link></li>
+                      </>
+                    )}
                     <li><hr className="dropdown-divider" /></li>
                     <li><button onClick={handleLogout} className="dropdown-item text-danger">Cerrar Sesión</button></li>
                   </ul>

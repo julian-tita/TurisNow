@@ -1,10 +1,9 @@
 // TurisNow: User Reservations Management Page
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
-import reservaService from '../services/reservaService';
-import type { ReservaDetalleDTO } from '../services/reservaService';
+import reservaService, { type QRData, type ReservaDetalleDTO } from '../services/reservaService';
 import ReservaDetailModal from '../components/reservas/ReservaDetailModal';
 import SkeletonCard from '../components/common/SkeletonCard';
 
@@ -22,6 +21,10 @@ const MisReservas: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [qrCodes, setQrCodes] = useState<Record<number, QRData>>({});
+  const [qrLoadingIds, setQrLoadingIds] = useState<Record<number, boolean>>({});
+  const [qrErrorIds, setQrErrorIds] = useState<Record<number, string>>({});
+  const [reservaQrVisible, setReservaQrVisible] = useState<number | null>(null);
   
   // Modal de detalle
   const [reservaSeleccionada, setReservaSeleccionada] = useState<ReservaDetalleDTO | null>(null);
@@ -60,10 +63,44 @@ const MisReservas: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filtroEstado, busquedaTitulo, fechaDesde, fechaHasta, precioMin, precioMax, user]);
 
+  const fetchQRForReserva = useCallback(async (reservaId: number) => {
+    setQrErrorIds((prev) => {
+      const actualizado = { ...prev };
+      delete actualizado[reservaId];
+      return actualizado;
+    });
+
+    setQrLoadingIds((prev) => ({ ...prev, [reservaId]: true }));
+
+    try {
+      const qrData = await reservaService.obtenerQRReserva(reservaId);
+      setQrCodes((prev) => ({ ...prev, [reservaId]: qrData }));
+    } catch (err: any) {
+      const mensaje = err?.message || 'No se pudo obtener el código QR.';
+      setQrErrorIds((prev) => ({ ...prev, [reservaId]: mensaje }));
+      toast.error(mensaje);
+    } finally {
+      setQrLoadingIds((prev) => ({ ...prev, [reservaId]: false }));
+    }
+  }, []);
+
+  const prefetchQRCodes = useCallback((lista: ReservaDetalleDTO[]) => {
+    lista.forEach((reserva) => {
+      if (!reserva.id) {
+        return;
+      }
+      if (qrCodes[reserva.id] || qrLoadingIds[reserva.id]) {
+        return;
+      }
+      void fetchQRForReserva(reserva.id);
+    });
+  }, [fetchQRForReserva, qrCodes, qrLoadingIds]);
+
   const loadReservas = async () => {
     try {
       setLoading(true);
       setError(null);
+      setReservaQrVisible(null);
 
       // Si hay un filtro específico por estado, usar el endpoint con estado
       if (filtroEstado && filtroEstado !== '') {
@@ -81,6 +118,7 @@ const MisReservas: React.FC = () => {
         setReservas(reservasFiltradas);
         setTotalPages(Math.ceil(reservasFiltradas.length / 6));
         setTotalElements(reservasFiltradas.length);
+        prefetchQRCodes(reservasFiltradas);
       } else {
         // Para "Todas", implementar paginación client-side
         const response = await reservaService.obtenerMisReservas(
@@ -109,6 +147,7 @@ const MisReservas: React.FC = () => {
         setReservas(reservasPaginadas);
         setTotalElements(todasLasReservas.length);
         setTotalPages(Math.ceil(todasLasReservas.length / pageSize));
+        prefetchQRCodes(reservasPaginadas);
       }
     } catch (err: any) {
       const errorMessage = err.message || 'Error al cargar las reservas';
@@ -627,14 +666,69 @@ const MisReservas: React.FC = () => {
                         </small>
                       </div>
                     )}
+
+                    {reserva.id && reservaQrVisible === reserva.id && (
+                      <div className="bg-light border rounded p-3 text-center mb-3">
+                        {qrLoadingIds[reserva.id] ? (
+                          <div className="spinner-border text-primary" role="status">
+                            <span className="visually-hidden">Cargando código QR...</span>
+                          </div>
+                        ) : qrCodes[reserva.id] ? (
+                          <>
+                            <img
+                              src={qrCodes[reserva.id].qrCodeBase64.startsWith('data:')
+                                ? qrCodes[reserva.id].qrCodeBase64
+                                : `data:image/png;base64,${qrCodes[reserva.id].qrCodeBase64}`}
+                              alt={`Código QR reserva ${reserva.id}`}
+                              style={{ maxWidth: '200px', width: '100%' }}
+                            />
+                            <small className="d-block text-muted mt-2">
+                              Código: {qrCodes[reserva.id].tokenQr}
+                            </small>
+                          </>
+                        ) : (
+                          <small className="text-muted">
+                            No pudimos mostrar el QR. Intenta nuevamente o revisa tu correo.
+                          </small>
+                        )}
+
+                        {reserva.id && qrErrorIds[reserva.id] && (
+                          <small className="d-block text-danger mt-2">
+                            {qrErrorIds[reserva.id]}
+                          </small>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Footer con acciones */}
                   <div className="card-footer bg-transparent">
                     <div className="d-flex gap-2">
                       <button
+                        className={`btn btn-sm flex-fill ${reserva.id && reservaQrVisible === reserva.id ? 'btn-secondary' : 'btn-outline-secondary'}`}
+                        onClick={() => {
+                          if (!reserva.id) {
+                            return;
+                          }
+                          if (reservaQrVisible !== reserva.id) {
+                            void fetchQRForReserva(reserva.id);
+                          }
+                          setReservaQrVisible((prev) => (prev === reserva.id ? null : reserva.id));
+                        }}
+                        title="Mostrar código QR"
+                      >
+                        <i className="fas fa-qrcode me-1"></i>
+                        {reserva.id && reservaQrVisible === reserva.id ? 'Ocultar QR' : 'Ver QR'}
+                      </button>
+                      
+                      <button
                         className="btn btn-sm btn-primary flex-fill"
-                        onClick={() => setReservaSeleccionada(reserva)}
+                        onClick={() => {
+                          setReservaSeleccionada(reserva);
+                          if (reserva.id) {
+                            void fetchQRForReserva(reserva.id);
+                          }
+                        }}
                       >
                         <i className="fas fa-info-circle me-1"></i>
                         Ver Detalle
@@ -709,6 +803,10 @@ const MisReservas: React.FC = () => {
           reserva={reservaSeleccionada}
           onClose={() => setReservaSeleccionada(null)}
           onCancelar={handleCancelarReserva}
+          qrData={reservaSeleccionada.id ? qrCodes[reservaSeleccionada.id] : undefined}
+          qrLoading={Boolean(reservaSeleccionada.id && qrLoadingIds[reservaSeleccionada.id])}
+          qrError={reservaSeleccionada.id ? qrErrorIds[reservaSeleccionada.id] : undefined}
+          onFetchQR={(id) => void fetchQRForReserva(id)}
         />
       )}
     </div>

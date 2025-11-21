@@ -74,12 +74,12 @@ public class AuthService {
         }
         
         // Verificar contraseña (comparación directa sin encriptación)
-        if (!usuario.getPassword().equals(request.getPassword())) {
+        if (!request.getPassword().equals(usuario.getPassword())) {
             return new AuthResponse("Contraseña incorrecta");
         }
         
         // Verificar que el usuario esté activo
-        if (!usuario.getActivo()) {
+        if (Boolean.FALSE.equals(usuario.getActivo())) {
             return new AuthResponse("Usuario inactivo");
         }
         

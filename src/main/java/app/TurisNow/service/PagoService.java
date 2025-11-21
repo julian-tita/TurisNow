@@ -135,7 +135,6 @@ public class PagoService {
             PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                     .items(preferenceItems)
                     .backUrls(backUrls)
-                    // .autoReturn("approved") // Comentado: requiere URLs públicas (no localhost)
                     .notificationUrl(webhookUrl)
                     .externalReference(externalReference)
                     .statementDescriptor("TurisNow") // Nombre que aparece en el resumen de la tarjeta
@@ -281,7 +280,6 @@ public class PagoService {
             PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                     .items(preferenceItems)
                     .backUrls(backUrls)
-                    // .autoReturn("approved") // Comentado: requiere URLs públicas (no localhost)
                     .notificationUrl(webhookUrl)
                     .externalReference(externalReference)
                     .statementDescriptor("TurisNow")

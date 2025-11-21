@@ -1,5 +1,6 @@
 package app.TurisNow.config;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -99,6 +100,7 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui.html").permitAll()
                 .requestMatchers("/api-docs/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/api/itinerario/**").authenticated() // Itinerario requiere autenticación
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
