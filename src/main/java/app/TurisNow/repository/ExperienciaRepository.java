@@ -48,5 +48,14 @@ public interface ExperienciaRepository extends JpaRepository<Experiencia, Long> 
      */
     @Query("SELECT e.categoria as categoria, COUNT(e) as cantidad FROM Experiencia e GROUP BY e.categoria ORDER BY e.categoria")
     List<Object[]> findCategoriasConConteo();
+    
+    /**
+     * Obtener experiencias en orden aleatorio (para "todas las categorías").
+     * Usa RANDOM() de PostgreSQL para variar las experiencias mostradas en cada carga.
+     */
+    @Query(value = "SELECT * FROM experiencias ORDER BY RANDOM() \n-- #pageable\n",
+           countQuery = "SELECT COUNT(*) FROM experiencias",
+           nativeQuery = true)
+    Page<Experiencia> findAllRandom(Pageable pageable);
 }
 

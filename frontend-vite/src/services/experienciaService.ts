@@ -49,6 +49,7 @@ const buildQueryParams = (filters: ExperienciaFilters): URLSearchParams => {
   if (filters.size !== undefined) params.append('size', filters.size.toString());
   if (filters.sort) params.append('sort', filters.sort);
   if (filters.direction) params.append('direction', filters.direction);
+  if (filters.random) params.append('random', 'true');
   
   return params;
 };

@@ -129,6 +129,7 @@ export interface ExperienciaFilters {
   size?: number;
   sort?: string;
   direction?: 'ASC' | 'DESC';
+  random?: boolean;
 }
 
 // Create/Update experiencia (for admin)

@@ -36,10 +36,11 @@ public class ExperienciaController {
     public ResponseEntity<Page<ExperienciaListadoDTO>> listarExperiencias(
             @RequestParam(required = false) String categoria,
             @RequestParam(required = false) String ubicacion,
+            @RequestParam(required = false, defaultValue = "false") boolean random,
             @PageableDefault(size = 6, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         
         Page<ExperienciaListadoDTO> experiencias = experienciaService.listarExperiencias(
-            categoria, ubicacion, pageable
+            categoria, ubicacion, pageable, random
         );
         return ResponseEntity.ok(experiencias);
     }
@@ -153,7 +154,7 @@ public class ExperienciaController {
             @RequestParam(defaultValue = "4") int size) {
         
         Pageable pageable = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "id"));
-        Page<ExperienciaListadoDTO> experiencias = experienciaService.listarExperiencias(null, null, pageable);
+        Page<ExperienciaListadoDTO> experiencias = experienciaService.listarExperiencias(null, null, pageable, false);
         
         return ResponseEntity.ok(experiencias.getContent());
     }

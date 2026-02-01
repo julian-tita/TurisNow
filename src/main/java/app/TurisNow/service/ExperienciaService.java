@@ -33,11 +33,13 @@ public class ExperienciaService {
     
     /**
      * Listar experiencias con filtros opcionales
+     * @param random Si true y no hay filtros, retorna experiencias en orden aleatorio
      */
     public Page<ExperienciaListadoDTO> listarExperiencias(
             String categoria, 
             String ubicacion, 
-            Pageable pageable) {
+            Pageable pageable,
+            boolean random) {
         
         Page<Experiencia> experiencias;
         
@@ -53,8 +55,11 @@ public class ExperienciaService {
         } else if (ubicacion != null && !ubicacion.isEmpty()) {
             // Solo ubicación
             experiencias = experienciaRepository.findByUbicacion(ubicacion, pageable);
+        } else if (random) {
+            // Sin filtros + random: 6 experiencias aleatorias
+            experiencias = experienciaRepository.findAllRandom(pageable);
         } else {
-            // Sin filtros
+            // Sin filtros (orden por id)
             experiencias = experienciaRepository.findAll(pageable);
         }
         

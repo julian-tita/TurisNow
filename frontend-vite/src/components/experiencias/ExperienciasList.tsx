@@ -75,13 +75,17 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
       setLoading(true);
       setError(null);
 
+      // Cuando "Todas las categorías" está seleccionado, usar orden aleatorio para variedad
+      const esTodasLasCategorias = !filtroCategoria;
+      
       const filters = {
         categoria: filtroCategoria || undefined,
         ubicacion: filtroUbicacion || undefined,
         page: currentPage,
         size: pageSize,
         sort: 'id',
-        direction: 'ASC' as const
+        direction: 'ASC' as const,
+        random: esTodasLasCategorias
       };
 
       const response: ExperienciasResponse = await experienciaService.getAllExperiencias(filters);
@@ -92,8 +96,9 @@ const ExperienciasList: React.FC<ExperienciasListProps> = ({
       experienciasFiltradas = aplicarFiltrosAvanzados(experienciasFiltradas);
 
       setExperiencias(experienciasFiltradas);
-      setTotalPages(Math.ceil(experienciasFiltradas.length / pageSize));
-      setTotalElements(experienciasFiltradas.length);
+      // Usar totales del API para paginación correcta
+      setTotalPages(response.totalPages);
+      setTotalElements(response.totalElements);
       
     } catch (error: any) {
       const errorMsg = 'Error al cargar las experiencias. Por favor, intenta nuevamente.';
