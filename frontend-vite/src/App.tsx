@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -6,6 +7,10 @@ import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home';              // <- Home (index)
 import About from './pages/About';            // <- About page
+import Contact from './pages/Contact';        // <- Contact page
+import FAQ from './pages/FAQ';                // <- FAQ page
+import Privacy from './pages/Privacy';        // <- Privacy page
+import Terms from './pages/Terms';            // <- Terms page
 import Explorar from './pages/Explorar';
 import ExperienciasListado from './pages/ExperienciasListado';
 import ExperienciaDetalle from './pages/ExperienciaDetalle';
@@ -66,6 +71,18 @@ function App() {
 
             {/* About page */}
             <Route path="/about" element={<About />} />
+
+            {/* Contact page */}
+            <Route path="/contact" element={<Contact />} />
+
+            {/* FAQ page */}
+            <Route path="/faq" element={<FAQ />} />
+
+            {/* Privacy page */}
+            <Route path="/privacy" element={<Privacy />} />
+
+            {/* Terms page */}
+            <Route path="/terms" element={<Terms />} />
 
               {/* Experiences */}
               <Route path="/explorar" element={<Explorar />} />
@@ -139,10 +156,18 @@ function App() {
           </Routes>
         </div>
 
-        <Footer />
+        {/* Mostrar Footer salvo que estemos en rutas de admin */}
+        <ConditionalFooter />
       </Router>
     </AuthProvider>
   );
 }
 
 export default App;
+
+const ConditionalFooter: React.FC = () => {
+  const location = useLocation();
+  const path = location.pathname || '';
+  const hideFooter = path.startsWith('/admin');
+  return hideFooter ? null : <Footer />;
+};
